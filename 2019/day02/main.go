@@ -18,22 +18,50 @@ func main() {
 		return !unicode.IsDigit(r)
 	})
 
-	vm := make([]int, 0, len(split))
+	memory := make([]int, 0, len(split))
 	for _, val := range split {
 		intVal, err := strconv.Atoi(val)
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		vm = append(vm, intVal)
+		memory = append(memory, intVal)
 	}
 
-	vm[1] = 12
-	vm[2] = 2
+	fmt.Println("Part 1 End program position 0:", run1202AlarmState(memory))
+	noun, verb := findMatchingNounAndVerb(memory)
+	fmt.Println("Part 2 noun", noun, "verb", verb)
+}
 
-	output := RunProgram(vm)
+func findMatchingNounAndVerb(memory []int) (int, int) {
+	for i := 0; i <= 99; i++ {
+		for j := 0; j <= 99; j++ {
+			input := append([]int(nil), memory...)
+			input = setNounAndVerb(input, i, j)
+			output := RunProgram(input)
+			if output[0] == 19690720 {
+				return i, j
+			}
+		}
+	}
 
-	fmt.Println("End program position 0:", output[0])
+	return -1, -1
+}
+
+func run1202AlarmState(memory []int) int {
+	programInput := append([]int(nil), memory...)
+	programInput = setNounAndVerb(programInput, 12, 2)
+
+	output := RunProgram(programInput)
+
+	return output[0]
+}
+
+func setNounAndVerb(memory []int, noun int, verb int) []int {
+	memory[1] = noun
+	memory[2] = verb
+
+	return memory
 }
 
 /*
