@@ -40,8 +40,8 @@ func run1202AlarmState(memory []int) int {
 	machine.LoadMemory(programInput)
 	machine.SetNounAndVerb(12, 2)
 
-	output := machine.RunProgram()
-	return output[0]
+	machine.RunProgram()
+	return machine.GetMemory()[0]
 }
 
 func findMatchingNounAndVerb(memory []int) (int, int) {
@@ -51,8 +51,8 @@ func findMatchingNounAndVerb(memory []int) (int, int) {
 			input := append([]int(nil), memory...)
 			machine.LoadMemory(input)
 			machine.SetNounAndVerb(i, j)
-			output := machine.RunProgram()
-			if output[0] == 19690720 {
+			machine.RunProgram()
+			if machine.GetMemory()[0] == 19690720 {
 				return i, j
 			}
 		}

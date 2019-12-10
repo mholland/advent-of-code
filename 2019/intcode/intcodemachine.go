@@ -19,23 +19,22 @@ func (m *Machine) LoadMemory(memory []int) {
 	m.memory = memory
 }
 
-func (m *Machine) RunProgram() []int {
-	instructionPointer := 0
+func (m *Machine) RunProgram() {
+	ip := 0
 	for {
-		opCode := m.memory[instructionPointer]
-		if opCode == 99 {
-			break
+		opCode := m.memory[ip]
+		switch opCode {
+		case 1:
+			m.memory[m.memory[ip+3]] = m.memory[m.memory[ip+1]] + m.memory[m.memory[ip+2]]
+		case 2:
+			m.memory[m.memory[ip+3]] = m.memory[m.memory[ip+1]] * m.memory[m.memory[ip+2]]
+		case 99:
+			return
 		}
-		parameterOne := m.memory[instructionPointer+1]
-		parameterTwo := m.memory[instructionPointer+2]
-		parameterThree := m.memory[instructionPointer+3]
-		if opCode == 1 {
-			m.memory[parameterThree] = m.memory[parameterOne] + m.memory[parameterTwo]
-		} else {
-			m.memory[parameterThree] = m.memory[parameterOne] * m.memory[parameterTwo]
-		}
-		instructionPointer += 4
+		ip += 4
 	}
+}
 
+func (m *Machine) GetMemory() []int {
 	return m.memory
 }
