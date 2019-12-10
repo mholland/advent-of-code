@@ -29,28 +29,47 @@ func PasswordMatches(password int) (bool, bool) {
 	sixth := password % 10
 
 	digits := [6]int{first, second, third, fourth, fifth, sixth}
-	containsDouble := false
-	identicalRuns := map[int]int{}
-	ascends := true
-	for i := range digits {
-		if i > 4 {
-			continue
-		}
-		if digits[i] == digits[i+1] {
-			containsDouble = true
-			identicalRuns[digits[i]] = identicalRuns[digits[i]] + 1
-		}
+	ascends := digitsAscend(digits)
+	containsConsecutive := containsConsecutive(digits)
+	containsDouble := containsDouble(digits)
 
+	return containsConsecutive && ascends, ascends && containsDouble
+}
+
+func digitsAscend(digits [6]int) bool {
+	for i := 0; i < len(digits)-1; i++ {
 		if digits[i] > digits[i+1] {
-			ascends = false
-		}
-	}
-	containsAtLeastOneDouble := false
-	for _, v := range identicalRuns {
-		if v+1 == 2 {
-			containsAtLeastOneDouble = true
+			return false
 		}
 	}
 
-	return containsDouble && ascends, ascends && containsAtLeastOneDouble
+	return true
+}
+
+func containsConsecutive(digits [6]int) bool {
+	for i := 0; i < len(digits)-1; i++ {
+		if digits[i] == digits[i+1] {
+			return true
+		}
+	}
+
+	return false
+}
+
+func containsDouble(digits [6]int) bool {
+	for i := 0; i < len(digits)-1; i++ {
+		count := 1
+		for j := i + 1; j < len(digits); j++ {
+			if digits[i] == digits[j] {
+				count++
+				i++
+			}
+		}
+		if count == 2 {
+			return true
+		}
+
+	}
+
+	return false
 }
