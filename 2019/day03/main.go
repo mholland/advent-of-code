@@ -28,8 +28,9 @@ func main() {
 	wireOne, _ := ParsePathSegments(lineOne)
 	wireTwo, _ := ParsePathSegments(lineTwo)
 
-	shortestDistance, _ := FindClosestDistances(wireOne, wireTwo)
-	log.Printf("Shortest distance: %v", shortestDistance)
+	shortestDistance, shortestPath := FindClosestDistances(wireOne, wireTwo)
+	log.Printf("Shortest distance: %v\n", shortestDistance)
+	log.Printf("Shortest path: %v", shortestPath)
 }
 
 type Vertex struct {
@@ -87,35 +88,48 @@ func getDirectionFromInput(dir byte) (Vertex, bool) {
 }
 
 func FindClosestDistances(w1 []PathSegment, w2 []PathSegment) (int, int) {
-	seen := map[Vertex]bool{}
+	seen := map[Vertex]int{}
 	intersections := make([]Vertex, 0)
 	cur := Vertex{0, 0}
+	steps := 0
 	for _, s := range w1 {
 		for i := 0; i < s.Length; i++ {
 			new := Vertex{cur.x + s.Direction.x, cur.y + s.Direction.y}
-			seen[new] = true
+			steps++
+			if seen[new] == 0 {
+				seen[new] = steps
+			}
+
 			cur = new
 		}
 	}
 	cur = Vertex{0, 0}
+	steps = 0
 	for _, s := range w2 {
 		for i := 0; i < s.Length; i++ {
 			new := Vertex{cur.x + s.Direction.x, cur.y + s.Direction.y}
-			if seen[new] {
+			steps++
+			if seen[new] != 0 {
 				intersections = append(intersections, new)
+				seen[new] = seen[new] + steps
 			}
 			cur = new
 		}
 	}
 	shortestDistance := math.MaxInt32
+	shortestPath := math.MaxInt32
 	for _, intersection := range intersections {
 		distance := abs(intersection.x) + abs(intersection.y)
 		if distance < shortestDistance {
 			shortestDistance = distance
 		}
+		path := seen[intersection]
+		if path < shortestPath {
+			shortestPath = path
+		}
 	}
 
-	return shortestDistance, 0
+	return shortestDistance, shortestPath
 }
 
 func abs(x int) int {
