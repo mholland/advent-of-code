@@ -2,32 +2,12 @@ package main
 
 import (
 	"fmt"
+
 	"github.com/mholland/advent-of-code/2019/intcode"
-	"io/ioutil"
-	"log"
-	"strconv"
-	"strings"
-	"unicode"
 )
 
 func main() {
-	data, err := ioutil.ReadFile("input.txt")
-	if err != nil {
-		log.Fatal(err)
-	}
-	split := strings.FieldsFunc(string(data), func(r rune) bool {
-		return !unicode.IsDigit(r)
-	})
-
-	memory := make([]int, 0, len(split))
-	for _, val := range split {
-		intVal, err := strconv.Atoi(val)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		memory = append(memory, intVal)
-	}
+	memory := intcode.ReadProgram("input.txt")
 
 	fmt.Println("Part 1 End program position 0:", run1202AlarmState(memory))
 	noun, verb := findMatchingNounAndVerb(memory)

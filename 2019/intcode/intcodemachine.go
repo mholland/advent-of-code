@@ -1,5 +1,13 @@
 package intcode
 
+import (
+	"io/ioutil"
+	"log"
+	"strconv"
+	"strings"
+	"unicode"
+)
+
 type Machine struct {
 	memory []int
 	input  int
@@ -19,6 +27,8 @@ func (m *Machine) SetNounAndVerb(noun int, verb int) {
 
 func (m *Machine) LoadMemory(memory []int) {
 	m.memory = memory
+	m.output = []int(nil)
+	m.input = 0
 }
 
 func (m *Machine) RunProgram() {
@@ -27,17 +37,43 @@ func (m *Machine) RunProgram() {
 		instruction := parseInstruction(m.memory[ip])
 		switch instruction.opCode {
 		case 1:
-			m.memory[m.memory[ip+3]] = m.GetOperand(ip+1, instruction.parameterOneMode) + m.GetOperand(ip+2, instruction.parameterTwoMode)
+			m.memory[m.memory[ip+3]] = m.getOperand(ip+1, instruction.parameterOneMode) + m.getOperand(ip+2, instruction.parameterTwoMode)
 			ip += 4
 		case 2:
-			m.memory[m.memory[ip+3]] = m.GetOperand(ip+1, instruction.parameterOneMode) * m.GetOperand(ip+2, instruction.parameterTwoMode)
+			m.memory[m.memory[ip+3]] = m.getOperand(ip+1, instruction.parameterOneMode) * m.getOperand(ip+2, instruction.parameterTwoMode)
 			ip += 4
 		case 3:
 			m.memory[m.memory[ip+1]] = m.input
 			ip += 2
 		case 4:
-			m.output = append(m.output, m.GetOperand(ip+1, instruction.parameterOneMode))
+			m.output = append(m.output, m.getOperand(ip+1, instruction.parameterOneMode))
 			ip += 2
+		case 5:
+			if m.getOperand(ip+1, instruction.parameterOneMode) != 0 {
+				ip = m.getOperand(ip+2, instruction.parameterTwoMode)
+				continue
+			}
+			ip += 3
+		case 6:
+			if m.getOperand(ip+1, instruction.parameterOneMode) == 0 {
+				ip = m.getOperand(ip+2, instruction.parameterTwoMode)
+				continue
+			}
+			ip += 3
+		case 7:
+			res := 0
+			if m.getOperand(ip+1, instruction.parameterOneMode) < m.getOperand(ip+2, instruction.parameterTwoMode) {
+				res = 1
+			}
+			m.memory[m.memory[ip+3]] = res
+			ip += 4
+		case 8:
+			res := 0
+			if m.getOperand(ip+1, instruction.parameterOneMode) == m.getOperand(ip+2, instruction.parameterTwoMode) {
+				res = 1
+			}
+			m.memory[m.memory[ip+3]] = res
+			ip += 4
 		case 99:
 			return
 		}
@@ -52,7 +88,7 @@ func (m *Machine) GetOutput() []int {
 	return m.output
 }
 
-func (m *Machine) GetOperand(address int, mode int) int {
+func (m *Machine) getOperand(address int, mode int) int {
 	switch mode {
 	case immediateMode:
 		return m.memory[address]
@@ -89,4 +125,26 @@ const (
 
 func (m *Machine) GetMemory() []int {
 	return m.memory
+}
+
+func ReadProgram(inputPath string) []int {
+	data, err := ioutil.ReadFile(inputPath)
+	if err != nil {
+		log.Fatal(err)
+	}
+	split := strings.FieldsFunc(string(data), func(r rune) bool {
+		return !unicode.IsDigit(r) && r != '-'
+	})
+
+	memory := make([]int, 0, len(split))
+	for _, val := range split {
+		intVal, err := strconv.Atoi(val)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		memory = append(memory, intVal)
+	}
+
+	return memory
 }

@@ -2,39 +2,24 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
-	"log"
-	"strconv"
-	"strings"
-	"unicode"
 
 	"github.com/mholland/advent-of-code/2019/intcode"
 )
 
 func main() {
-	data, err := ioutil.ReadFile("input.txt")
-	if err != nil {
-		log.Fatal(err)
-	}
-	split := strings.FieldsFunc(string(data), func(r rune) bool {
-		return !unicode.IsDigit(r) && r != '-'
-	})
-
-	memory := make([]int, 0, len(split))
-	for _, val := range split {
-		intVal, err := strconv.Atoi(val)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		memory = append(memory, intVal)
-	}
+	memory := intcode.ReadProgram("input.txt")
 
 	machine := intcode.NewIntcodeMachine()
-	machine.LoadMemory(memory)
+	machine.LoadMemory(append([]int(nil), memory...))
 	machine.SetInput(1)
 	machine.RunProgram()
 	output := machine.GetOutput()
 
-	fmt.Printf("Diagnostic code from TEST: %v\n", output[len(output)-1])
+	fmt.Printf("Diagnostic code from TEST input 1: %v\n", output[len(output)-1])
+
+	machine.LoadMemory(append([]int(nil), memory...))
+	machine.SetInput(5)
+	machine.RunProgram()
+	output = machine.GetOutput()
+	fmt.Printf("Diagnostic code from TEST input 5: %v\n", output[len(output)-1])
 }
