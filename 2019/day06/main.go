@@ -41,7 +41,6 @@ func MapOutPlanets(orbits []string) map[string]*Planet {
 		if _, ok := planets[child]; !ok {
 			planets[child] = NewPlanet(child)
 		}
-		planets[parent].children = append(planets[parent].children, planets[child])
 		planets[child].parent = planets[parent]
 	}
 
@@ -87,15 +86,13 @@ func getAncestors(planets map[string]*Planet, planetName string) []*Planet {
 
 func NewPlanet(name string) *Planet {
 	return &Planet{
-		name:     name,
-		children: []*Planet(nil),
+		name: name,
 	}
 }
 
 type Planet struct {
-	name     string
-	parent   *Planet
-	children []*Planet
+	name   string
+	parent *Planet
 }
 
 func (p *Planet) Distance() int {

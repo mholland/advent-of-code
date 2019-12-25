@@ -8,84 +8,117 @@ import (
 	"unicode"
 )
 
+/*Machine represents an entire Intcode machine*/
 type Machine struct {
-	memory []int
-	input  int
-	output []int
+	memory       []int
+	inputs       []int
+	inputPointer int
+	outputs      []int
+	State        State
+	ip           int
 }
 
+/*NewIntcodeMachine creates a newly initialised machine to perform operations on*/
 func NewIntcodeMachine() *Machine {
 	return &Machine{
-		memory: []int{},
+		memory:       []int(nil),
+		inputs:       []int(nil),
+		inputPointer: 0,
+		outputs:      []int(nil),
+		State:        Initialised,
+		ip:           0,
 	}
 }
 
+/*SetNounAndVerb initialised the second and third memory values to provided arguments*/
 func (m *Machine) SetNounAndVerb(noun int, verb int) {
 	m.memory[1] = noun
 	m.memory[2] = verb
 }
 
+/*LoadMemory initialises the machine memory to the provided program*/
 func (m *Machine) LoadMemory(memory []int) {
 	m.memory = memory
-	m.output = []int(nil)
-	m.input = 0
+	m.outputs = []int(nil)
+	m.inputs = []int(nil)
+	m.inputPointer = 0
+	m.ip = 0
 }
 
+/*RunProgram executes the program currently loaded into memory*/
 func (m *Machine) RunProgram() {
-	ip := 0
+	m.State = Running
 	for {
-		instruction := parseInstruction(m.memory[ip])
+		instruction := parseInstruction(m.memory[m.ip])
 		switch instruction.opCode {
 		case 1:
-			m.memory[m.memory[ip+3]] = m.getOperand(ip+1, instruction.parameterOneMode) + m.getOperand(ip+2, instruction.parameterTwoMode)
-			ip += 4
+			m.memory[m.memory[m.ip+3]] = m.getOperand(m.ip+1, instruction.parameterOneMode) + m.getOperand(m.ip+2, instruction.parameterTwoMode)
+			m.ip += 4
 		case 2:
-			m.memory[m.memory[ip+3]] = m.getOperand(ip+1, instruction.parameterOneMode) * m.getOperand(ip+2, instruction.parameterTwoMode)
-			ip += 4
+			m.memory[m.memory[m.ip+3]] = m.getOperand(m.ip+1, instruction.parameterOneMode) * m.getOperand(m.ip+2, instruction.parameterTwoMode)
+			m.ip += 4
 		case 3:
-			m.memory[m.memory[ip+1]] = m.input
-			ip += 2
+			if m.inputPointer >= len(m.inputs) {
+				m.State = AwaitingInput
+				return
+			}
+			m.memory[m.memory[m.ip+1]] = m.inputs[m.inputPointer]
+			m.inputPointer++
+			m.ip += 2
 		case 4:
-			m.output = append(m.output, m.getOperand(ip+1, instruction.parameterOneMode))
-			ip += 2
+			m.outputs = append(m.outputs, m.getOperand(m.ip+1, instruction.parameterOneMode))
+			m.ip += 2
 		case 5:
-			if m.getOperand(ip+1, instruction.parameterOneMode) != 0 {
-				ip = m.getOperand(ip+2, instruction.parameterTwoMode)
+			if m.getOperand(m.ip+1, instruction.parameterOneMode) != 0 {
+				m.ip = m.getOperand(m.ip+2, instruction.parameterTwoMode)
 				continue
 			}
-			ip += 3
+			m.ip += 3
 		case 6:
-			if m.getOperand(ip+1, instruction.parameterOneMode) == 0 {
-				ip = m.getOperand(ip+2, instruction.parameterTwoMode)
+			if m.getOperand(m.ip+1, instruction.parameterOneMode) == 0 {
+				m.ip = m.getOperand(m.ip+2, instruction.parameterTwoMode)
 				continue
 			}
-			ip += 3
+			m.ip += 3
 		case 7:
 			res := 0
-			if m.getOperand(ip+1, instruction.parameterOneMode) < m.getOperand(ip+2, instruction.parameterTwoMode) {
+			if m.getOperand(m.ip+1, instruction.parameterOneMode) < m.getOperand(m.ip+2, instruction.parameterTwoMode) {
 				res = 1
 			}
-			m.memory[m.memory[ip+3]] = res
-			ip += 4
+			m.memory[m.memory[m.ip+3]] = res
+			m.ip += 4
 		case 8:
 			res := 0
-			if m.getOperand(ip+1, instruction.parameterOneMode) == m.getOperand(ip+2, instruction.parameterTwoMode) {
+			if m.getOperand(m.ip+1, instruction.parameterOneMode) == m.getOperand(m.ip+2, instruction.parameterTwoMode) {
 				res = 1
 			}
-			m.memory[m.memory[ip+3]] = res
-			ip += 4
+			m.memory[m.memory[m.ip+3]] = res
+			m.ip += 4
 		case 99:
+			m.State = Halted
 			return
 		}
 	}
 }
 
+/*SetInput provides a single input to be used in conjunction with opcode 3*/
 func (m *Machine) SetInput(input int) {
-	m.input = input
+	m.inputs = append(m.inputs, input)
 }
 
+/*SetInputs provides multiple inputs to be used in conjunction with opcode 3*/
+func (m *Machine) SetInputs(inputs []int) {
+	m.inputs = inputs
+}
+
+/*GetOutput returns all outputs from the program using opcode 4*/
 func (m *Machine) GetOutput() []int {
-	return m.output
+	return m.outputs
+}
+
+/*GetLastOutput returns the last output from the program using opcode 4*/
+func (m *Machine) GetLastOutput() int {
+	return m.outputs[len(m.outputs)-1]
 }
 
 func (m *Machine) getOperand(address int, mode int) int {
@@ -97,13 +130,13 @@ func (m *Machine) getOperand(address int, mode int) int {
 	}
 }
 
-func parseInstruction(instruction int) *Instruction {
-	opCode := instruction % 100
-	p1Mode := (instruction / 100) % 10
-	p2Mode := (instruction / 1000) % 10
-	p3Mode := (instruction / 10000) % 10
+func parseInstruction(inst int) *instruction {
+	opCode := inst % 100
+	p1Mode := (inst / 100) % 10
+	p2Mode := (inst / 1000) % 10
+	p3Mode := (inst / 10000) % 10
 
-	return &Instruction{
+	return &instruction{
 		opCode:             opCode,
 		parameterOneMode:   p1Mode,
 		parameterTwoMode:   p2Mode,
@@ -111,7 +144,7 @@ func parseInstruction(instruction int) *Instruction {
 	}
 }
 
-type Instruction struct {
+type instruction struct {
 	opCode             int
 	parameterOneMode   int
 	parameterTwoMode   int
@@ -123,10 +156,23 @@ const (
 	immediateMode
 )
 
+/*State represents the current states of the Intcode machine*/
+type State int
+
+/*All available states an Intcode machine can be in*/
+const (
+	Initialised State = iota
+	Running
+	AwaitingInput
+	Halted
+)
+
+/*GetMemory returns the current state of memory within the Intcode machine*/
 func (m *Machine) GetMemory() []int {
 	return m.memory
 }
 
+/*ReadProgram accepts an input path on disk and reads the program into an int slice*/
 func ReadProgram(inputPath string) []int {
 	data, err := ioutil.ReadFile(inputPath)
 	if err != nil {
