@@ -10,23 +10,25 @@ import (
 
 /*Machine represents an entire Intcode machine*/
 type Machine struct {
-	memory       []int
-	inputs       []int
-	inputPointer int
-	outputs      []int
-	State        State
-	ip           int
+	memory             []int
+	inputs             []int
+	inputPointer       int
+	outputs            []int
+	State              State
+	ip                 int
+	relativeBaseOffset int
 }
 
 /*NewIntcodeMachine creates a newly initialised machine to perform operations on*/
 func NewIntcodeMachine() *Machine {
 	return &Machine{
-		memory:       []int(nil),
-		inputs:       []int(nil),
-		inputPointer: 0,
-		outputs:      []int(nil),
-		State:        Initialised,
-		ip:           0,
+		memory:             []int(nil),
+		inputs:             []int(nil),
+		inputPointer:       0,
+		outputs:            []int(nil),
+		State:              Initialised,
+		ip:                 0,
+		relativeBaseOffset: 0,
 	}
 }
 
@@ -43,6 +45,8 @@ func (m *Machine) LoadMemory(memory []int) {
 	m.inputs = []int(nil)
 	m.inputPointer = 0
 	m.ip = 0
+	m.State = Initialised
+	m.relativeBaseOffset = 0
 }
 
 /*RunProgram executes the program currently loaded into memory*/
@@ -52,17 +56,17 @@ func (m *Machine) RunProgram() {
 		instruction := parseInstruction(m.memory[m.ip])
 		switch instruction.opCode {
 		case 1:
-			m.memory[m.memory[m.ip+3]] = m.getOperand(m.ip+1, instruction.parameterOneMode) + m.getOperand(m.ip+2, instruction.parameterTwoMode)
+			*m.getTargetAddress(m.ip+3, instruction.parameterThreeMode) = m.getOperand(m.ip+1, instruction.parameterOneMode) + m.getOperand(m.ip+2, instruction.parameterTwoMode)
 			m.ip += 4
 		case 2:
-			m.memory[m.memory[m.ip+3]] = m.getOperand(m.ip+1, instruction.parameterOneMode) * m.getOperand(m.ip+2, instruction.parameterTwoMode)
+			*m.getTargetAddress(m.ip+3, instruction.parameterThreeMode) = m.getOperand(m.ip+1, instruction.parameterOneMode) * m.getOperand(m.ip+2, instruction.parameterTwoMode)
 			m.ip += 4
 		case 3:
 			if m.inputPointer >= len(m.inputs) {
 				m.State = AwaitingInput
 				return
 			}
-			m.memory[m.memory[m.ip+1]] = m.inputs[m.inputPointer]
+			*m.getTargetAddress(m.ip+1, instruction.parameterOneMode) = m.inputs[m.inputPointer]
 			m.inputPointer++
 			m.ip += 2
 		case 4:
@@ -85,20 +89,55 @@ func (m *Machine) RunProgram() {
 			if m.getOperand(m.ip+1, instruction.parameterOneMode) < m.getOperand(m.ip+2, instruction.parameterTwoMode) {
 				res = 1
 			}
-			m.memory[m.memory[m.ip+3]] = res
+			*m.getTargetAddress(m.ip+3, instruction.parameterThreeMode) = res
 			m.ip += 4
 		case 8:
 			res := 0
 			if m.getOperand(m.ip+1, instruction.parameterOneMode) == m.getOperand(m.ip+2, instruction.parameterTwoMode) {
 				res = 1
 			}
-			m.memory[m.memory[m.ip+3]] = res
+			*m.getTargetAddress(m.ip+3, instruction.parameterThreeMode) = res
 			m.ip += 4
+		case 9:
+			m.relativeBaseOffset += m.getOperand(m.ip+1, instruction.parameterOneMode)
+			m.ip += 2
 		case 99:
 			m.State = Halted
 			return
 		}
 	}
+}
+
+func (m *Machine) getTargetAddress(address int, parameterMode int) *int {
+
+	addr := m.memory[address]
+
+	if parameterMode == relativeMode {
+		addr = m.relativeBaseOffset + m.memory[address]
+	}
+
+	if addr >= len(m.memory) {
+		m.expandMemory(addr + 1)
+	}
+
+	return &m.memory[addr]
+}
+
+func (m *Machine) getOperand(address int, mode int) int {
+	switch mode {
+	case immediateMode:
+		return m.memory[address]
+	case relativeMode:
+		return m.memory[m.relativeBaseOffset+m.memory[address]]
+	default:
+		return m.memory[m.memory[address]]
+	}
+}
+
+func (m *Machine) expandMemory(size int) {
+	newSlice := make([]int, size, size)
+	copy(newSlice, m.memory)
+	m.memory = newSlice
 }
 
 /*SetInput provides a single input to be used in conjunction with opcode 3*/
@@ -119,15 +158,6 @@ func (m *Machine) GetOutput() []int {
 /*GetLastOutput returns the last output from the program using opcode 4*/
 func (m *Machine) GetLastOutput() int {
 	return m.outputs[len(m.outputs)-1]
-}
-
-func (m *Machine) getOperand(address int, mode int) int {
-	switch mode {
-	case immediateMode:
-		return m.memory[address]
-	default:
-		return m.memory[m.memory[address]]
-	}
 }
 
 func parseInstruction(inst int) *instruction {
@@ -154,6 +184,7 @@ type instruction struct {
 const (
 	positionMode int = iota
 	immediateMode
+	relativeMode
 )
 
 /*State represents the current states of the Intcode machine*/

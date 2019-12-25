@@ -279,3 +279,36 @@ func TestRunProgram_JumpEqualsLargeExampleGreaterThanEight(t *testing.T) {
 		t.Errorf("Output incorrect, expected: %v but actual: %v", expected, actual)
 	}
 }
+
+func TestRunProgram_RelativeModeExample(t *testing.T) {
+	machine := NewIntcodeMachine()
+	expected := []int{109, 1, 204, -1, 1001, 100, 1, 100, 1008, 100, 16, 101, 1006, 101, 0, 99}
+	machine.LoadMemory(expected)
+	machine.RunProgram()
+	actual := machine.GetOutput()
+	if !reflect.DeepEqual(actual, expected) {
+		t.Errorf("Output incorrect, expected %v but actual: %v", expected, actual)
+	}
+}
+
+func TestRunProgram_LargeNumbers(t *testing.T) {
+	machine := NewIntcodeMachine()
+	expected := 1125899906842624
+	machine.LoadMemory([]int{104, 1125899906842624, 99})
+	machine.RunProgram()
+	actual := machine.GetLastOutput()
+	if !reflect.DeepEqual(actual, expected) {
+		t.Errorf("Output incorrect, expected %v but actual: %v", expected, actual)
+	}
+}
+
+func TestRunProgram_MultiplyingLargeNumbers(t *testing.T) {
+	machine := NewIntcodeMachine()
+	expected := 1219070632396864
+	machine.LoadMemory([]int{1102, 34915192, 34915192, 7, 4, 7, 99, 0})
+	machine.RunProgram()
+	actual := machine.GetLastOutput()
+	if !reflect.DeepEqual(actual, expected) {
+		t.Errorf("Output incorrect, expected %v but actual: %v", expected, actual)
+	}
+}
