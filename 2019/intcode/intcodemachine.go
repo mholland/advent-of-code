@@ -124,14 +124,21 @@ func (m *Machine) getTargetAddress(address int, parameterMode int) *int {
 }
 
 func (m *Machine) getOperand(address int, mode int) int {
+	var addr int
 	switch mode {
 	case immediateMode:
-		return m.memory[address]
+		addr = address
 	case relativeMode:
-		return m.memory[m.relativeBaseOffset+m.memory[address]]
+		addr = m.relativeBaseOffset + m.memory[address]
 	default:
-		return m.memory[m.memory[address]]
+		addr = m.memory[address]
 	}
+
+	if addr >= len(m.memory) {
+		return 0
+	}
+
+	return m.memory[addr]
 }
 
 func (m *Machine) expandMemory(size int) {
