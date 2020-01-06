@@ -24,7 +24,6 @@ func NewIntcodeMachine() *Machine {
 	return &Machine{
 		memory:             []int(nil),
 		inputs:             []int(nil),
-		inputPointer:       0,
 		outputs:            []int(nil),
 		State:              Initialised,
 		ip:                 0,
@@ -34,8 +33,13 @@ func NewIntcodeMachine() *Machine {
 
 /*SetNounAndVerb initialised the second and third memory values to provided arguments*/
 func (m *Machine) SetNounAndVerb(noun int, verb int) {
-	m.memory[1] = noun
-	m.memory[2] = verb
+	m.SetMemoryValue(1, noun)
+	m.SetMemoryValue(2, verb)
+}
+
+/*SetMemoryValue inserts the provided value into the machine's memory at the provided address*/
+func (m *Machine) SetMemoryValue(address int, value int) {
+	m.memory[address] = value
 }
 
 /*LoadMemory initialises the machine memory to the provided program*/
@@ -43,7 +47,6 @@ func (m *Machine) LoadMemory(memory []int) {
 	m.memory = memory
 	m.outputs = []int(nil)
 	m.inputs = []int(nil)
-	m.inputPointer = 0
 	m.ip = 0
 	m.State = Initialised
 	m.relativeBaseOffset = 0
@@ -62,12 +65,12 @@ func (m *Machine) RunProgram() {
 			*m.getTargetAddress(m.ip+3, instruction.parameterThreeMode) = m.getOperand(m.ip+1, instruction.parameterOneMode) * m.getOperand(m.ip+2, instruction.parameterTwoMode)
 			m.ip += 4
 		case 3:
-			if m.inputPointer >= len(m.inputs) {
+			if len(m.inputs) == 0 {
 				m.State = AwaitingInput
 				return
 			}
-			*m.getTargetAddress(m.ip+1, instruction.parameterOneMode) = m.inputs[m.inputPointer]
-			m.inputPointer++
+			*m.getTargetAddress(m.ip+1, instruction.parameterOneMode) = m.inputs[0]
+			m.inputs = m.inputs[1:]
 			m.ip += 2
 		case 4:
 			m.outputs = append(m.outputs, m.getOperand(m.ip+1, instruction.parameterOneMode))
