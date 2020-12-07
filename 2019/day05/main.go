@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/mholland/advent-of-code/2019/intcode"
+	"github.com/mholland/advent-of-code/intcode"
 )
 
 func main() {

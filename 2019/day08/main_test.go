@@ -8,8 +8,8 @@ import (
 func TestParseLayers_Example(t *testing.T) {
 	actual := parseLayers("123456789012", 3, 2)
 	expected := [][]string{
-		[]string{"123", "456"},
-		[]string{"789", "012"},
+		{"123", "456"},
+		{"789", "012"},
 	}
 
 	if !reflect.DeepEqual(actual, expected) {

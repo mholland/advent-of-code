@@ -3,15 +3,15 @@ package main
 import (
 	"fmt"
 
-	"github.com/mholland/advent-of-code/2019/intcode"
+	"github.com/mholland/advent-of-code/intcode"
 )
 
 func main() {
 	program := intcode.ReadProgram("input.txt")
-	max := MaximisePhaseSettingSequence(program)
+	max := maximisePhaseSettingSequence(program)
 
 	fmt.Printf("Highest signal: %v\n", max)
-	fmt.Printf("Highest amplified signal %v", MaximiseAmplification(program))
+	fmt.Printf("Highest amplified signal %v", maximiseAmplification(program))
 }
 
 // https://en.wikipedia.org/wiki/Heap%27s_algorithm
@@ -42,7 +42,7 @@ func phaseSettingCombinations(n int, arr []int) [][]int {
 	return result
 }
 
-func MaximisePhaseSettingSequence(program []int) int {
+func maximisePhaseSettingSequence(program []int) int {
 	combinations := phaseSettingCombinations(5, []int{0, 1, 2, 3, 4})
 	machine := intcode.NewIntcodeMachine()
 
@@ -64,7 +64,7 @@ func MaximisePhaseSettingSequence(program []int) int {
 	return max
 }
 
-func MaximiseAmplification(program []int) int {
+func maximiseAmplification(program []int) int {
 	phaseSettingCombos := phaseSettingCombinations(5, []int{5, 6, 7, 8, 9})
 	maxOutput := 0
 	for _, phaseSettings := range phaseSettingCombos {
