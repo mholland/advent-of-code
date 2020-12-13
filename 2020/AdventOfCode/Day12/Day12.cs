@@ -82,8 +82,7 @@ namespace AdventOfCode.Day12
                     case (Command.Left, 270):
                         waypointPosition = (waypointPosition.Y, -waypointPosition.X);
                         break;
-                    case (Command.Right, 180):
-                    case (Command.Left, 180):
+                    case (Command.Right or Command.Left, 180):
                         waypointPosition = (-waypointPosition.X, -waypointPosition.Y);
                         break;
                     case (Command.Right, 270):
