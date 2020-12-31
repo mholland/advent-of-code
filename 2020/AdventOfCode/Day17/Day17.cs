@@ -60,7 +60,10 @@ namespace AdventOfCode.Day17
             for (var i = 0; i < 6; i++)
             {
                 cubes = RunSimulation(cubes, dimensions);
+
+            #if DEBUG
                 PrintCubes(i + 1, cubes);
+            #endif
             }
 
             return cubes.Values.Count(active => active);
