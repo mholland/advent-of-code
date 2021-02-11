@@ -5,11 +5,11 @@ import (
 )
 
 func TestExampleOne(t *testing.T) {
-	actual := collectAllKeys([]string{
+	actual := collectAllKeys(parseMaze([]string{
 		"#########",
 		"#b.A.@.a#",
 		"#########",
-	})
+	}))
 
 	if actual != 8 {
 		t.Errorf("Expected 8, actually: %d", actual)
@@ -17,13 +17,13 @@ func TestExampleOne(t *testing.T) {
 }
 
 func TestExampleTwo(t *testing.T) {
-	actual := collectAllKeys([]string{
+	actual := collectAllKeys(parseMaze([]string{
 		"########################",
 		"#f.D.E.e.C.b.A.@.a.B.c.#",
 		"######################.#",
 		"#d.....................#",
 		"########################",
-	})
+	}))
 
 	if actual != 86 {
 		t.Errorf("Expected 86, actually: %d", actual)
@@ -31,13 +31,13 @@ func TestExampleTwo(t *testing.T) {
 }
 
 func TestExampleThree(t *testing.T) {
-	actual := collectAllKeys([]string{
+	actual := collectAllKeys(parseMaze([]string{
 		"########################",
 		"#...............b.C.D.f#",
 		"#.######################",
 		"#.....@.a.B.c.d.A.e.F.g#",
 		"########################",
-	})
+	}))
 
 	if actual != 132 {
 		t.Errorf("Expected 132, actually: %d", actual)
@@ -45,7 +45,7 @@ func TestExampleThree(t *testing.T) {
 }
 
 func TestExampleFour(t *testing.T) {
-	actual := collectAllKeys([]string{
+	actual := collectAllKeys(parseMaze([]string{
 		"#################",
 		"#i.G..c...e..H.p#",
 		"########.########",
@@ -55,7 +55,7 @@ func TestExampleFour(t *testing.T) {
 		"########.########",
 		"#l.F..d...h..C.m#",
 		"#################",
-	})
+	}))
 
 	if actual != 136 {
 		t.Errorf("Expected 136, actually: %d", actual)
@@ -63,14 +63,14 @@ func TestExampleFour(t *testing.T) {
 }
 
 func TestExampleFive(t *testing.T) {
-	actual := collectAllKeys([]string{
+	actual := collectAllKeys(parseMaze([]string{
 		"########################",
 		"#@..............ac.GI.b#",
 		"###d#e#f################",
 		"###A#B#C################",
 		"###g#h#i################",
 		"########################",
-	})
+	}))
 
 	if actual != 81 {
 		t.Errorf("Expected 81, actually: %d", actual)
