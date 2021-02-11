@@ -5,7 +5,7 @@ import (
 	"math"
 	"time"
 
-	"github.com/mholland/advent-of-code/intcode"
+	"github.com/mholland/advent-of-code/2019/intcode"
 )
 
 func main() {
