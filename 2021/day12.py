@@ -7,20 +7,29 @@ with open("inputs/day12.input", encoding = "utf-8") as f:
         E[start].append(end)
         E[end].append(start)
 
-Q = deque()
-init = ("start", ["start"])
-Q.append(init)
-P = 0
-while Q:
-    cur, visited = Q.popleft()
-    for e in E[cur]:
-        if e == "end":
-            P += 1
-            continue
-        if e.islower() and e in visited:
-            continue
-        new_visited = visited.copy()
-        new_visited.append(e)
-        Q.append((e, new_visited))
+def solve(p2: bool) -> int:
+    Q = deque()
+    init = ("start", ["start"], False)
+    Q.append(init)
+    P = 0
+    while Q:
+        cur, visited, twice = Q.popleft()
+        for e in E[cur]:
+            t = twice
+            if e == "end":
+                P += 1
+                continue
+            if e.islower() and e in visited and (twice or e == "start" and p2):
+                continue
+            if e.islower() and e in visited:
+                if not p2:
+                    continue
+                t = True
 
-print(P)
+            new_visited = visited.copy()
+            new_visited.append(e)
+            Q.append((e, new_visited, t))
+    return P
+
+print(solve(False))
+print(solve(True))
