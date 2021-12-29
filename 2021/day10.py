@@ -4,6 +4,13 @@ with open("inputs/day10.input", encoding = "utf-8") as f:
 
 ES = 0
 CS = []
+P = {
+    "(": (")", 3, 1),
+    "[": ("]", 57, 2),
+    "{": ("}", 1197, 3),
+    "<": (">", 25137, 4)
+}
+
 for l in L:
     S = []
     error = False
@@ -12,20 +19,8 @@ for l in L:
             S.append(c)
             continue
         pop = S.pop()
-        if c == ")" and pop != "(":
-            ES += 3
-            error = True
-            break
-        if c == "]" and pop != "[":
-            ES += 57
-            error = True
-            break
-        if c == "}" and pop != "{":
-            ES += 1197
-            error = True
-            break
-        if c == ">" and pop != "<":
-            ES += 25137
+        if c != P[pop][0]:
+            ES += P[pop][1]
             error = True
             break
 
@@ -35,17 +30,9 @@ for l in L:
     cs = 0
     while S:
         x = S.pop()
-        cs *= 5
-        if x == "(":
-            cs += 1
-        if x == "[":
-            cs += 2
-        if x == "{":
-            cs += 3
-        if x == "<":
-            cs += 4
-    
+        cs = cs * 5 + P[x][2]
     CS.append(cs)
+
 CS.sort()
 
 print(ES)
