@@ -16,8 +16,8 @@ public sealed class Day06
     [InlineData("nppdvjthqldpwncqszvftbrmjlhg", 6)]
     [InlineData("nznrnfrfntjfmvfwmzdfjlvtqnbhcprsg", 10)]
     [InlineData("zcfzfwzzqfrljwzlrfnpqdbhtmscgvjw", 11)]
-    public void ExampleOne(string input, int marker)
-        => CharactersPrePacketStartMarker(input, 4)
+    public void ExampleOne(string input, int marker) => 
+        CharactersPrePacketStartMarker(input, 4)
             .Should()
             .Be(marker);
 
