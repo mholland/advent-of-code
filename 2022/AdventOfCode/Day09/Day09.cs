@@ -30,9 +30,10 @@ public sealed class Day09 : TestBase
     private int CountPositionsVisited(string[] input)
     {
         var visited = new HashSet<(int X, int Y)>();
-        var tail = (X: 0, Y: 0);
-        var head = (X: 0, Y: 0);
-        visited.Add(tail);
+        var knots = new LinkedList<(int X, int Y)>();
+        knots.AddLast((X: 0, Y: 0));
+        knots.AddLast((X: 0, Y: 0));
+        visited.Add(knots.Last!.Value);
         var moves = ParseMovements(input);
         var deltas = new Dictionary<string, (int X, int Y)>
         {
@@ -44,15 +45,24 @@ public sealed class Day09 : TestBase
         foreach (var (dir, dist) in moves)
         {
             var delta = deltas[dir];
+            var head = knots.First!;
             for (var a = 0; a < dist; a++)
             {
-                var newHead = (X: head.X + delta.X, Y: head.Y + delta.Y);
-                if (Math.Abs(newHead.X - tail.X) > 1 || Math.Abs(newHead.Y - tail.Y) > 1)
+                var prev = (X: head.Value.X, Y: head.Value.Y);
+                head.Value = (X: head.Value.X + delta.X, Y: head.Value.Y + delta.Y);
+                var cur = head.Next;
+                while (cur is not null)
                 {
-                    tail = (X: head.X, Y: head.Y);
-                    visited.Add(tail);
+                    var ahead = cur.Previous!.Value;
+                    if (Math.Abs(ahead.X - cur.Value.X) > 1 || Math.Abs(ahead.Y - cur.Value.Y) > 1)
+                    {
+                        cur.Value = (X: prev.X, Y: prev.Y);
+                        if (cur.Next is null)
+                            visited.Add(cur.Value);
+                    }
+                    prev = cur.Value;
+                    cur = cur.Next;
                 }
-                head = newHead;
             }
         }
 
