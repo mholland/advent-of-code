@@ -9,6 +9,9 @@ public abstract class TestBase
     public TestBase(ITestOutputHelper output)
     {
         Output = output;
-        Input = File.ReadAllLines(Path.Combine(Day, "input.txt"));
+        Input = ReadFile("input.txt");
     }
+
+    public string[] ReadFile(string name) =>
+        File.ReadAllLines(Path.Combine(Day, name));
 }
