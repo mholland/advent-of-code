@@ -11,47 +11,56 @@ public sealed class Day11 : TestBase
     }
 
     [Fact]
-    public void ExampleOne() => CalculateMonkeyBusiness(_example)
+    public void ExampleOne() => CalculateMonkeyBusiness(_example, 20, true)
         .Should()
         .Be(10605);
 
     [Fact]
-    public void PartOne() => Output.WriteLine($"Monkey business: {CalculateMonkeyBusiness(Input)}");
+    public void PartOne() => Output.WriteLine($"Monkey business: {CalculateMonkeyBusiness(Input, 20, true)}");
 
-    private int CalculateMonkeyBusiness(string[] input)
+    [Fact]
+    public void ExampleTwo() => CalculateMonkeyBusiness(_example, 10000, false)
+        .Should()
+        .Be(2713310158);
+
+    [Fact]
+    public void PartTwo() => Output.WriteLine($"Monkey business {CalculateMonkeyBusiness(Input, 10000, false)}");
+
+    private long CalculateMonkeyBusiness(string[] input, int rounds, bool lowerWorry)
     {
         var monkeys = Enumerable.Chunk(input, 7);
         var parsed = monkeys.Select(Monkey.Parse).ToArray();
-        for (var i = 0; i < 20; i++)
+        var lcm = parsed.Select(x => x.Divisor).Aggregate(1, (x, y) => x * y);
+        for (var i = 0; i < rounds; i++)
         foreach (var m in parsed)
         {
             while (m.HasItems)
             {
-                var (item, targetMonkey) = m.InspectItem();
+                var (item, targetMonkey) = m.InspectItem(lowerWorry, lcm);
                 parsed[targetMonkey].TakeItem(item);
             }
         }
 
         var top = parsed.OrderByDescending(x => x.ItemsInspected).ToArray();
-        return top[0].ItemsInspected * top[1].ItemsInspected;
+        return (long)top[0].ItemsInspected * (long)top[1].ItemsInspected;
     }
 
     private sealed class Monkey
     {
-        private readonly Queue<int> _items;
-        private readonly Func<int, int> _operation;
+        private readonly Queue<long> _items;
+        private readonly Func<long, long> _operation;
         private readonly int _trueMonkey;
         private readonly int _falseMonkey;
-        private readonly int _divisor;
-        public int ItemsInspected { get; private set; }= 0;
+        public int Divisor { get; private set; }
+        public long ItemsInspected { get; private set; } = 0;
 
         public bool HasItems => _items.Any();
 
-        private Monkey(int[] startingItems, Func<int, int> operation, int divisor, int trueMonkey, int falseMonkey)
+        private Monkey(long[] startingItems, Func<long, long> operation, int divisor, int trueMonkey, int falseMonkey)
         {
-            _items = new Queue<int>(startingItems);
+            _items = new Queue<long>(startingItems);
             _operation = operation;
-            _divisor = divisor;
+            Divisor = divisor;
             _trueMonkey = trueMonkey;
             _falseMonkey = falseMonkey;
         }
@@ -60,7 +69,7 @@ public sealed class Day11 : TestBase
         {
             var startingItems = input[1].Split(' ', StringSplitOptions.RemoveEmptyEntries)[2..]
                 .Select(i => i.TrimEnd(','))
-                .Select(int.Parse)
+                .Select(long.Parse)
                 .ToArray();
 
             var trueMonkey = int.Parse(input[4][^1].ToString());
@@ -68,7 +77,7 @@ public sealed class Day11 : TestBase
             var divisor = int.Parse(input[3].Split(' ')[^1]);
 
             var op = input[2].Split(' ', StringSplitOptions.RemoveEmptyEntries)[^2..];
-            Func<int, int> operation = (op[0], int.TryParse(op[1], out var arg)) switch
+            Func<long, long> operation = (op[0], long.TryParse(op[1], out var arg)) switch
             {
                 ("+", true) => (old) => old + arg,
                 ("*", true) => (old) => old * arg,
@@ -80,17 +89,22 @@ public sealed class Day11 : TestBase
             return new Monkey(startingItems, operation, divisor, trueMonkey, falseMonkey);
         }
 
-        public (int Item, int TargetMonkey) InspectItem()
+        public (long Item, int TargetMonkey) InspectItem(bool lowerWorry, int lcm)
         {
             ItemsInspected++;
             var item = _items.Dequeue();
-            var worryLevel = _operation.Invoke(item) / 3;
-            if (worryLevel % _divisor == 0)
+            var worryLevel = _operation.Invoke(item);
+            if (lowerWorry)
+                worryLevel /= 3;
+            else
+                worryLevel %= lcm;
+
+            if (worryLevel % Divisor == 0)
                 return (worryLevel, _trueMonkey);
             
             return (worryLevel, _falseMonkey);
         }
 
-        public void TakeItem(int item) => _items.Enqueue(item);
+        public void TakeItem(long item) => _items.Enqueue(item);
     }
 }
