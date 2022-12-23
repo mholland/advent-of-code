@@ -30,7 +30,7 @@ public sealed class Day10 : TestBase
     );
 
     [Fact]
-    public void PartTwo() => _output.WriteLine(GenerateImage(Input).Image);
+    public void PartTwo() => _output.WriteLine($"Image:{Environment.NewLine}{GenerateImage(Input).Image}");
 
     private (int SignalStrength, string Image) GenerateImage(string[] input)
     {
