@@ -9,7 +9,7 @@ public sealed class Day09 : TestBase
 
     protected override string Day => "Day09";
 
-    private string[] Example = new[]
+    private readonly string[] _example = 
     {
         "R 4",
         "U 4",
@@ -21,7 +21,7 @@ public sealed class Day09 : TestBase
         "R 2"
     };
 
-    private string[] ExTwo = new[]
+    private readonly string[] _exTwo = 
     {
         "R 5",
         "U 8",
@@ -34,13 +34,13 @@ public sealed class Day09 : TestBase
     };
 
     [Fact]
-    public void ExampleOne() => CountPositionsVisited(Example, 2).Should().Be(13);
+    public void ExampleOne() => CountPositionsVisited(_example, 2).Should().Be(13);
 
     [Fact]
     public void PartOne() => Output.WriteLine($"Visited: {CountPositionsVisited(Input, 2)}");
 
     [Fact]
-    public void ExampleTwo() => CountPositionsVisited(ExTwo, 10).Should().Be(36);
+    public void ExampleTwo() => CountPositionsVisited(_exTwo, 10).Should().Be(36);
 
     [Fact]
     public void PartTwo() => Output.WriteLine($"Visited: {CountPositionsVisited(Input, 10)}");
@@ -84,10 +84,10 @@ public sealed class Day09 : TestBase
             }
         }
 
-        return visited.Count();
+        return visited.Count;
     }
 
-    private IEnumerable<(string Direction, int Distance)> ParseMovements(string[] input) =>
+    private static IEnumerable<(string Direction, int Distance)> ParseMovements(string[] input) =>
         input.Select(x => x.Split(' ', StringSplitOptions.RemoveEmptyEntries))
             .Select(x => (x[0], int.Parse(x[1])));
 }

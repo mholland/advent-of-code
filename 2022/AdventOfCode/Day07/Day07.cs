@@ -8,7 +8,7 @@ public sealed class Day07 : TestBase
     {
     }
 
-    private string[] Example = new[]
+    private readonly string[] _example = 
     {
         "$ cd /",
         "$ ls",
@@ -36,13 +36,13 @@ public sealed class Day07 : TestBase
     };
 
     [Fact]
-    public void ExampleOne() => CalculateDirectorySize(Example).Should().Be(95437);
+    public void ExampleOne() => CalculateDirectorySize().Should().Be(95437);
 
     [Fact]
-    public void PartOne() => Output.WriteLine($"Size: {CalculateDirectorySize(Input)}");
+    public void PartOne() => Output.WriteLine($"Size: {CalculateDirectorySize()}");
 
     [Fact]
-    public void ExampleTwo() => CalculateSmallestDeletableDirectorySize(Example).Should().Be(24933642);
+    public void ExampleTwo() => CalculateSmallestDeletableDirectorySize(_example).Should().Be(24933642);
 
     [Fact]
     public void PartTwo() => Output.WriteLine($"Size: {CalculateSmallestDeletableDirectorySize(Input)}");
@@ -57,10 +57,10 @@ public sealed class Day07 : TestBase
         return directories.Values.Where(v => unused + v >= required).Min();
     }
 
-    private int CalculateDirectorySize(string[] input) =>
+    private int CalculateDirectorySize() =>
         ParseDirectorySizes(Input).Values.Where(s => s <= 100000).Sum();
 
-    private Dictionary<string, int> ParseDirectorySizes(string[] input)
+    private static Dictionary<string, int> ParseDirectorySizes(string[] input)
     {
         var pwd = new Stack<string>();
         var directories = new Dictionary<string, int>();
@@ -85,12 +85,10 @@ public sealed class Day07 : TestBase
                 pwd.Pop();
             }
 
-            if (Char.IsDigit(line[0]))
-            {
-                var split = line.Split(' ');
-                for (var i = 1; i <= pwd.Count(); i++)
-                    directories[Path.Combine(pwd.Reverse().Take(i).ToArray())] += int.Parse(split[0]);
-            }
+            if (!char.IsDigit(line[0])) continue;
+            var split = line.Split(' ');
+            for (var i = 1; i <= pwd.Count; i++)
+                directories[Path.Combine(pwd.Reverse().Take(i).ToArray())] += int.Parse(split[0]);
         }
 
         return directories;

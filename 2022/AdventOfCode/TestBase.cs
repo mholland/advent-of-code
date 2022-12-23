@@ -6,12 +6,12 @@ public abstract class TestBase
     protected readonly string[] Input;
     protected abstract string Day { get; }
 
-    public TestBase(ITestOutputHelper output)
+    protected TestBase(ITestOutputHelper output)
     {
         Output = output;
         Input = ReadFile("input.txt");
     }
 
-    public string[] ReadFile(string name) =>
+    protected string[] ReadFile(string name) =>
         File.ReadAllLines(Path.Combine(Day, name));
 }

@@ -35,9 +35,9 @@ public sealed class Day12 : TestBase
     [Fact]
     public void PartTwo() => Output.WriteLine($"Shortest: {CalculateOverallShortestDistance(Input)}");
 
-    private (IDictionary<(int X, int Y), int> Grid, (int X, int Y) Start, (int X, int Y) End) ParseGrid(string[] input)
+    private static (IDictionary<(int X, int Y), int> Grid, (int X, int Y) Start, (int X, int Y) End) ParseGrid(string[] input)
     {
-                var grid = new Dictionary<(int X, int Y), int>();
+        var grid = new Dictionary<(int X, int Y), int>();
         (int X, int Y) start = default;
         (int X, int Y) end = default;
         for (var y = 0; y < input.Length; y++)
@@ -76,7 +76,7 @@ public sealed class Day12 : TestBase
         return ShortestDistance(grid, new[] { start }, end);
     }
 
-    private int ShortestDistance(IDictionary<(int X, int Y), int> grid, (int X, int Y)[] starts, (int X, int Y) end)
+    private static int ShortestDistance(IDictionary<(int X, int Y), int> grid, (int X, int Y)[] starts, (int X, int Y) end)
     {
         var queue = new Queue<(int X, int Y, int Dist, int Height)>();
         foreach (var start in starts)
@@ -91,11 +91,10 @@ public sealed class Day12 : TestBase
             foreach (var dir in dirs)
             {
                 var potentialPath = (X: current.X + dir.X, Y: current.Y + dir.Y);
-                if (grid.TryGetValue(potentialPath, out var dest) && !visited.Contains(potentialPath) && dest <= current.Height + 1)
-                {
-                    queue.Enqueue((potentialPath.X, potentialPath.Y, current.Dist + 1, dest));
-                    visited.Add((potentialPath.X, potentialPath.Y));
-                }
+                if (!grid.TryGetValue(potentialPath, out var dest) || visited.Contains(potentialPath) ||
+                    dest > current.Height + 1) continue;
+                queue.Enqueue((potentialPath.X, potentialPath.Y, current.Dist + 1, dest));
+                visited.Add((potentialPath.X, potentialPath.Y));
             }
         }
 

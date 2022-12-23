@@ -7,7 +7,7 @@ public sealed class Day06
 
     public Day06(ITestOutputHelper output)
     {
-        _input = File.ReadAllText("Day06/input.txt")!;
+        _input = File.ReadAllText("Day06/input.txt");
         _output = output;
     }
 
@@ -37,7 +37,7 @@ public sealed class Day06
     [Fact]
     public void PartTwo() => _output.WriteLine($"Preprocess: {CharactersPrePacketStartMarker(_input, 14)}");
 
-    private int CharactersPrePacketStartMarker(string input, int width)
+    private static int CharactersPrePacketStartMarker(string input, int width)
     {
         for (var i = width; i < input.Length; i++)
         {

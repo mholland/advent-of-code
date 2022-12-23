@@ -9,7 +9,7 @@ public sealed class Day03 : TestBase
     {
     }
 
-    private string[] Example = new[]
+    private readonly string[] _example = 
     {
         "vJrwpWtwJgWrhcsFMMfFFhFp",
         "jqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL",
@@ -20,29 +20,29 @@ public sealed class Day03 : TestBase
     };
 
     [Fact]
-    public void ExampleOne() => CalculatePrioritySum(Example).Should().Be(157);
+    public void ExampleOne() => CalculatePrioritySum(_example).Should().Be(157);
 
     [Fact]
     public void PartOne() => Output.WriteLine($"Priority sum: {CalculatePrioritySum(Input)}");
 
     [Fact]
-    public void ExampleTwo() => CalculateBadgePrioritySum(Example).Should().Be(70);
+    public void ExampleTwo() => CalculateBadgePrioritySum(_example).Should().Be(70);
 
     [Fact]
     public void PartTwo() => Output.WriteLine($"Badge priority sum: {CalculateBadgePrioritySum(Input)}");
 
     private int CalculateBadgePrioritySum(string[] input) => 
-        Enumerable.Chunk(input, 3)
+        input.Chunk(3)
             .Select(group => group[0].Intersect(group[1]).Intersect(group[2]).First())
-            .Select(g => CalculatePriority(g)).Sum();
+            .Select(CalculatePriority).Sum();
 
-    private int CalculatePrioritySum(string[] input) =>
+    private static int CalculatePrioritySum(string[] input) =>
         input
             .Select(l => (One: l[..(l.Length / 2)], Two: l[(l.Length / 2)..]))
             .Select(c => c.One.Intersect(c.Two).First())
-            .Select(i => CalculatePriority(i))
+            .Select(CalculatePriority)
             .Sum();
 
     private static int CalculatePriority(char item) => 
-        Char.IsUpper(item) ? (int)item - 64 + 26 : (int)item - 96;
+        char.IsUpper(item) ? item - 64 + 26 : item - 96;
 }

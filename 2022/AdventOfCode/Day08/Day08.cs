@@ -8,7 +8,7 @@ public sealed class Day08 : TestBase
     {
     }
 
-    private string[] Example = new[]
+    private readonly string[] _example = 
     {
         "30373",
         "25512",
@@ -18,7 +18,7 @@ public sealed class Day08 : TestBase
     };
 
     [Fact]
-    public void ExampleOne() => VisibleTrees(Example).Should().Be(21);
+    public void ExampleOne() => VisibleTrees(_example).Should().Be(21);
 
     [Fact]
     public void PartOne() => Output.WriteLine($"Visible: {VisibleTrees(Input)}");
@@ -27,9 +27,9 @@ public sealed class Day08 : TestBase
     public void PartTwo() => Output.WriteLine($"Scenic score: {HighestScenicScore(Input)}");
 
     [Fact]
-    public void ExampleTwo() => HighestScenicScore(Example).Should().Be(8);
+    public void ExampleTwo() => HighestScenicScore(_example).Should().Be(8);
 
-    private int HighestScenicScore(string[] input)
+    private static int HighestScenicScore(string[] input)
     {
         var (parsed, width, height) = ParseTrees(input);
         var highest = 0;
@@ -74,7 +74,7 @@ public sealed class Day08 : TestBase
         return highest;
     }
 
-    private int VisibleTrees(string[] input)
+    private static int VisibleTrees(string[] input)
     {
         var (parsed, width, height) = ParseTrees(input);
         var visible = width * 2 + height * 2 - 4;
@@ -82,7 +82,7 @@ public sealed class Day08 : TestBase
         for (var y = 1; y < height - 1; y++)
             for (var x = 1; x < width - 1; x++)
             {
-                if (parsed[y][..(x)].All(t => t < parsed[y][x]) || //left
+                if (parsed[y][..x].All(t => t < parsed[y][x]) || //left
                     parsed[y][(x + 1)..].All(t => t < parsed[y][x]) || //right
                     parsed[..y].All(t => t[x] < parsed[y][x]) || //up
                     parsed[(y + 1)..].All(t => t[x] < parsed[y][x])) //down

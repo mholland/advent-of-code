@@ -9,19 +9,25 @@ public sealed class Day14 : TestBase
     {
     }
 
-    private string[] Example = new[]
+    private readonly string[] _example = 
     {
         "498,4 -> 498,6 -> 496,6",
         "503,4 -> 502,4 -> 502,9 -> 494,9"
     };
 
     [Fact]
-    public void ExampleOne() => CalculateCollectedSand(Example).Should().Be(24);
+    public void ExampleOne() => CalculateCollectedSand(_example, false).Should().Be(24);
 
     [Fact]
-    public void PartOne() => Output.WriteLine($"Sand: {CalculateCollectedSand(Input)}");
+    public void PartOne() => Output.WriteLine($"Sand: {CalculateCollectedSand(Input, false)}");
+    
+    [Fact]
+    public void ExampleTwo() => CalculateCollectedSand(_example, true).Should().Be(93);
+    
+    [Fact]
+    public void PartTwo() => Output.WriteLine($"Sand: {CalculateCollectedSand(Input, true)}");
 
-    private int CalculateCollectedSand(string[] input)
+    private static HashSet<(int X, int Y)> ReadCave(string[] input)
     {
         var filled = new HashSet<(int X, int Y)>();
         foreach (var vein in input)
@@ -46,10 +52,16 @@ public sealed class Day14 : TestBase
                 }
             }
         }
-        var abyss = filled.Max(x => x.Y) + 1;
+
+        return filled;
+    }
+
+    private int CalculateCollectedSand(string[] input, bool hasFloor)
+    {
+        var cave = ReadCave(input);
+        var maxDepth = cave.Max(x => x.Y) + 2;
 
         var dest = new[] { (X: 0, Y: 1), (X: -1, Y: 1), (X: 1, Y: 1) };
-        var abyssReached = false;
         var sand = 0;
         while (true)
         {
@@ -60,29 +72,22 @@ public sealed class Day14 : TestBase
                 for (var i = 0; i < dest.Length; i++)
                 {
                     var poss = (X: cur.X + dest[i].X, Y: cur.Y + dest[i].Y);
-                    if (!filled.Contains(poss))
-                    {
-                        cur = poss;
-                        moved = true;
-                        break;
-                    }
+                    if (cave.Contains(poss) || poss.Y == maxDepth) continue;
+                    cur = poss;
+                    moved = true;
+                    break;
                 }
                 if (!moved)
                 {
-                    filled.Add(cur);
+                    cave.Add(cur);
                     sand++;
+                    if (hasFloor && cave.Contains((500, 0)))
+                        return sand;
                     break;
                 }
-                if (cur.Y >= abyss)
-                {
-                    abyssReached = true;
-                    break;
-                }
+                if (!hasFloor && cur.Y + 1 >= maxDepth)
+                    return sand;
             }
-            if (abyssReached)
-                break;
         }
-
-        return sand;
     }
 }

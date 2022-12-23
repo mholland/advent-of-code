@@ -8,7 +8,7 @@ public sealed class Day05 : TestBase
     {
     }
 
-    private string[] Example = new[]
+    private readonly string[] _example = 
     {
         "    [D]    ",
         "[N] [C]    ",
@@ -22,25 +22,24 @@ public sealed class Day05 : TestBase
     };
 
     [Fact]
-    public void ExampleOne() => CalculateHeadMessage(Example, 9000).Should().Be("CMZ");
+    public void ExampleOne() => CalculateHeadMessage(_example, 9000).Should().Be("CMZ");
 
     [Fact]
     public void PartOne() => Output.WriteLine($"Message: {CalculateHeadMessage(Input, 9000)}");
 
     [Fact]
-    public void ExampleTwo() => CalculateHeadMessage(Example, 9001).Should().Be("MCD");
+    public void ExampleTwo() => CalculateHeadMessage(_example, 9001).Should().Be("MCD");
 
     [Fact]
     public void PartTwo() => Output.WriteLine($"Message: {CalculateHeadMessage(Input, 9001)}");
 
-    private string CalculateHeadMessage(string[] input, int crateMoverVersion)
+    private static string CalculateHeadMessage(string[] input, int crateMoverVersion)
     {
         var stacks = GenerateInitialStacks(input);
         var proc = ReadRearrangementProcedure(input);
 
-        for (var i = 0; i < proc.Length; i++)
+        foreach (var inst in proc)
         {
-            var inst = proc[i];
             var temp = new char[inst.Amount];
             for (var j = 0; j < inst.Amount; j++)
                 temp[j] = stacks[inst.From].Pop();
@@ -48,8 +47,8 @@ public sealed class Day05 : TestBase
             if (crateMoverVersion == 9001)
                 temp = temp.Reverse().ToArray();
 
-            for (var k = 0; k < temp.Length; k++)
-                stacks[inst.To].Push(temp[k]);
+            foreach (var t in temp)
+                stacks[inst.To].Push(t);
         }
 
         return stacks.Aggregate(string.Empty, (message, stack) => message += stack.Peek());

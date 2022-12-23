@@ -8,7 +8,7 @@ public sealed class Day04 : TestBase
     {
     }
 
-    private string[] Example = new[]
+    private readonly string[] _example = 
     {
         "2-4,6-8",
         "2-3,4-5",
@@ -19,18 +19,18 @@ public sealed class Day04 : TestBase
     };
 
     [Fact]
-    public void ExampleOne() => CalculateEncompassingRanges(Example).Should().Be(2);
+    public void ExampleOne() => CalculateEncompassingRanges(_example).Should().Be(2);
 
     [Fact]
     public void PartOne() => Output.WriteLine($"Contained within: {CalculateEncompassingRanges(Input)}");
 
     [Fact]
-    public void ExampleTwo() => CalculateOverlappingRanges(Example).Should().Be(4);
+    public void ExampleTwo() => CalculateOverlappingRanges(_example).Should().Be(4);
 
     [Fact]
     public void PartTwo() => Output.WriteLine($"Overlapping: {CalculateOverlappingRanges(Input)}");
 
-    private IEnumerable<(Range First, Range Second)> ParseRanges(string[] input)
+    private static IEnumerable<(Range First, Range Second)> ParseRanges(string[] input)
     {
         return input.Select(l => l.Split(',', StringSplitOptions.RemoveEmptyEntries))
             .Select(r => (First: ParseRange(r[0]), Second: ParseRange(r[1])));
@@ -42,11 +42,11 @@ public sealed class Day04 : TestBase
         }
     }
 
-    private int CalculateEncompassingRanges(string[] input) => 
+    private static int CalculateEncompassingRanges(string[] input) => 
         ParseRanges(input)
             .Count(r => r.First.Contains(r.Second) || r.Second.Contains(r.First));
 
-    private int CalculateOverlappingRanges(string[] input) =>
+    private static int CalculateOverlappingRanges(string[] input) =>
         ParseRanges(input)
             .Count(r => r.First.Overlaps(r.Second));
 }

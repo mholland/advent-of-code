@@ -53,7 +53,7 @@ public sealed class Day13 : TestBase
     private int FindDecoderKey(string[] input)
     {
         var packets = input.Where(i => !string.IsNullOrWhiteSpace(i))
-            .Select(p => (JsonArray.Parse(p) as JsonArray)!)
+            .Select(p => (JsonNode.Parse(p) as JsonArray)!)
             .ToList();
 
         var two = new JsonArray(new JsonArray(2));
@@ -72,8 +72,8 @@ public sealed class Day13 : TestBase
     }
 
     private int FindCorrectSignals(string[] input) =>
-        Enumerable.Chunk(input.Where(i => !string.IsNullOrWhiteSpace(i)), 2)
-            .Select(i => (First: JsonArray.Parse(i[0]) as JsonArray, Second: JsonArray.Parse(i[1]) as JsonArray))
+        input.Where(i => !string.IsNullOrWhiteSpace(i)).Chunk(2)
+            .Select(i => (First: JsonNode.Parse(i[0]) as JsonArray, Second: JsonNode.Parse(i[1]) as JsonArray))
             .Select((x, i) => (Ord: i + 1, Comp: PacketComparer.CompareTo(x.First!, x.Second!)))
             .Aggregate(0, (acc, c) => acc += c.Comp == -1 ? c.Ord : 0);
 
@@ -105,7 +105,7 @@ public sealed class Day13 : TestBase
                 for (i = 0; i < Math.Min(j1.Count, j2.Count); i++)
                 {
                     var cmp = CompareTo(j1[i]!, j2[i]!);
-                    if (cmp == -1 || cmp == 1) return cmp;
+                    if (cmp is -1 or 1) return cmp;
                 }
                 if (i == j1.Count && i < j2.Count) return -1;
                 if (i == j2.Count && i < j1.Count) return 1;
