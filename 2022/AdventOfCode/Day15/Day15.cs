@@ -33,7 +33,51 @@ public sealed class Day15 : TestBase
     [Fact]
     public void PartOne() => Output.WriteLine($"Beaconless: {CalculateBeaconlessPositions(Input, 2_000_000)}");
 
+    [Fact]
+    public void ExampleTwo() => FindDistressTuningFrequency(_example, 20).Should().Be(56000011);
+
+    [Fact]
+    public void PartTwo() => Output.WriteLine($"Tuning frequency: {FindDistressTuningFrequency(Input, 4_000_000)}");
+
+    private static ulong FindDistressTuningFrequency(string[] input, int boxSize)
+    {
+        var sensors = ParseSensors(input);
+        for (var y = 0; y <= boxSize; y++)
+        {
+            var sensorlessRanges = SensorlessRanges(sensors, y);
+            var merged = MergeRanges(sensorlessRanges)
+                .Where(x => x.X2 >= 0)
+                .Where(x => x.X1 <= boxSize)
+                .ToArray();
+            if (merged[0].X1 < 0)
+                merged[0] = (0, merged[0].X2);
+            if (merged[^1].X2 > boxSize)
+                merged[^1] = (merged[^1].X1, boxSize);
+            if (merged.Length > 1)
+                return 4_000_000 * ((ulong)merged[0].X2 + 1) + (ulong)y;
+        }
+
+        return 0;
+    }
+
     private static int CalculateBeaconlessPositions(string[] input, int yPos)
+    {
+        var sensors = ParseSensors(input);
+        var ranges = SensorlessRanges(sensors, yPos);
+
+        var merged = MergeRanges(ranges);
+        var beacons = sensors.Where(s => s.NearestBeacon.Y == yPos).Select(x => x.NearestBeacon).Distinct().Count();
+        return merged.Aggregate(0, (agg, cur) => agg += cur.X2 - cur.X1 + 1) - beacons;
+    }
+
+    private static List<(int X1, int X2)> SensorlessRanges(IEnumerable<Sensor> sensors, int yPos) =>
+        sensors.Where(s => Math.Abs(s.Position.Y - yPos) <= s.DistanceToNearestBeacon()).ToArray()
+            .Select(x => (Sensor: x, Dist: Math.Abs(x.Position.Y - yPos)))
+            .Select(x => (x.Sensor, x.Dist, X1: x.Sensor.Position.X - x.Sensor.DistanceToNearestBeacon() + x.Dist))
+            .Select(x => (x.X1, X2: x.Sensor.Position.X + x.Sensor.DistanceToNearestBeacon() - x.Dist))
+            .ToList();
+
+    private static List<Sensor> ParseSensors(string[] input)
     {
         var sensors = input.Select(i => i.Split(' ', StringSplitOptions.RemoveEmptyEntries))
             .Select(x => (Sensor: (X: x[2], Y: x[3]), Beacon: (X: x[8], Y: x[9])));
@@ -41,31 +85,40 @@ public sealed class Day15 : TestBase
         parsedSensors.AddRange(sensors.Select(s => new Sensor(
             (int.Parse(s.Sensor.X.Split('=')[1][..^1]), int.Parse(s.Sensor.Y.Split('=')[1][..^1])),
             (int.Parse(s.Beacon.X.Split('=')[1][..^1]), int.Parse(s.Beacon.Y.Split('=')[1]))
-            )));
+        )));
+        return parsedSensors;
+    }
 
-        var intersecting = parsedSensors.Where(s => Math.Abs(s.Position.Y - yPos) <= s.DistanceToNearestBeacon()).ToArray();
-        var maxDist = intersecting.Max(s => s.Position.X + s.DistanceToNearestBeacon());
-        var minDist = intersecting.Min(s => s.Position.X - s.DistanceToNearestBeacon());
-        var noBeacon = 0;
-        for (var i = minDist; i < maxDist; i++)
+    private static IEnumerable<(int X1, int X2)> MergeRanges(List<(int X1, int X2)> ranges)
+    {
+        ranges = ranges.OrderBy(x => x.X1).ToList();
+
+        var stack = new Stack<(int X1, int X2)>();
+        stack.Push(ranges.First());
+        foreach (var rng in ranges.Skip(1))
         {
-            if (intersecting.Any(s => s.NearestBeacon == (i, yPos)))
+            var current = stack.Peek();
+
+            if (current.X2 < rng.X1)
+            {
+                stack.Push(rng);
                 continue;
-            if (parsedSensors.Any(s => s.Position == (i, yPos)))
-                continue;
-            if (intersecting.Any(s => s.DistanceTo((i, yPos)) <= s.DistanceToNearestBeacon()))
-                noBeacon++;
+            }
+
+            if (current.X2 >= rng.X2) continue;
+
+            current.X2 = rng.X2;
+            stack.Pop();
+            stack.Push(current);
         }
-        return noBeacon;
+
+        return stack.Reverse().ToList();
     }
 
     private record Sensor((int X, int Y) Position, (int X, int Y) NearestBeacon)
     {
         public int DistanceToNearestBeacon() =>
-            DistanceTo(NearestBeacon);
-
-        public int DistanceTo((int X, int Y) to) =>
-            Math.Abs(Position.X - to.X) + Math.Abs(Position.Y - to.Y);
+            Math.Abs(Position.X - NearestBeacon.X) + Math.Abs(Position.Y - NearestBeacon.Y);
     }
 }
 
