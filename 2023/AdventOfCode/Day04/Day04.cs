@@ -1,3 +1,5 @@
+using Card = (int[] Winning, int[] Card);
+
 namespace AdventOfCode.Day04;
 
 public sealed class Day04(ITestOutputHelper output) : TestBase(output)
@@ -31,9 +33,7 @@ public sealed class Day04(ITestOutputHelper output) : TestBase(output)
     private static int CountCards(string[] input) 
     {
         var count = 0;
-        var cardsWon = input.Select(i => i.Split(":")[1])
-            .Select(c => c.Split("|"))
-            .Select(c => (Winning: ParseNumbers(c[0]), Card: ParseNumbers(c[1])))
+        var cardsWon = ParseCards(input)
             .Select((c, i) => (Id: i + 1, Count: c.Winning.Intersect(c.Card).Count()))
             .ToArray();
 
@@ -52,15 +52,19 @@ public sealed class Day04(ITestOutputHelper output) : TestBase(output)
     }
 
     private static double CalculateCardPoints(string[] input) => 
-        input.Select(i => i.Split(":")[1])
-            .Select(c => c.Split("|"))
-            .Select(c => (Winning: ParseNumbers(c[0]), Card: ParseNumbers(c[1])))
+        ParseCards(input)
             .Select(c => c.Winning.Intersect(c.Card).Count())
             .Where(ct => ct > 0)
             .Select(ct => Math.Pow(2, ct - 1))
             .Sum();
 
-    private static IEnumerable<int> ParseNumbers(string val) =>
+    private static IEnumerable<Card> ParseCards(string[] input) =>
+        input.Select(i => i.Split(":")[1])
+            .Select(c => c.Split("|"))
+            .Select(c => (Winning: ParseNumbers(c[0]), Card: ParseNumbers(c[1])));
+
+    private static int[] ParseNumbers(string val) =>
         val.Split(" ", StringSplitOptions.RemoveEmptyEntries)
-            .Select(int.Parse);
+            .Select(int.Parse)
+            .ToArray();
 }
