@@ -14,4 +14,7 @@ public abstract class TestBase
 
     protected string[] ReadFile(string name) =>
         File.ReadAllLines(Path.Combine(Day, name));
+
+    protected string ReadAll(string name) =>
+        File.ReadAllText(Path.Combine(Day, name));
 }
