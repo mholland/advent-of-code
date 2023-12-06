@@ -1,3 +1,5 @@
+using Range = (long Start, long End);
+
 namespace AdventOfCode.Day05;
 
 public sealed class Day05(ITestOutputHelper output) : TestBase(output)
@@ -41,13 +43,61 @@ humidity-to-location map:
     
 
     [Fact]
-    public void ExampleOne() => FindLowestLocation(_example).Should().Be(35);
+    public void ExampleOne() => FindLowestIndividualLocation(_example).Should().Be(35);
 
     [Fact]
     public void PartOne() =>
-        Output.WriteLine("Lowest location: " + FindLowestLocation(ReadAll("input.txt")));
+        Output.WriteLine("Lowest location: " + FindLowestIndividualLocation(ReadAll("input.txt")));
 
-    private static long FindLowestLocation(string input)
+    [Fact]
+    public void ExampleTwo() => FindLowestRangeLocation(_example).Should().Be(46);
+
+    [Fact]
+    public void PartTwo() =>
+        Output.WriteLine("Lowest ranged location: " + FindLowestRangeLocation(ReadAll("input.txt")));
+
+    private static long FindLowestIndividualLocation(string input)
+    {
+        var (seeds, mappers) = ParseInput(input);
+
+        var finalLocs = new List<long>();
+        foreach (var seed in seeds)
+        {
+            var loc = seed;
+            foreach (var mapper in mappers)
+            {
+                loc = mapper.GetDestination(loc);
+            }
+            finalLocs.Add(loc);
+        }
+
+        return finalLocs.Min();
+    }
+
+    private static long FindLowestRangeLocation(string input)
+    {
+        var (seeds, mappers) = ParseInput(input);
+
+        var starts = seeds
+            .Chunk(2)
+            .Select(c => (Start: c[0], End: c[0] + c[1]))
+            .ToArray();
+        
+        var mins = new List<long>();
+        foreach (var start in starts)
+        {
+            List<Range> ranges = [start];
+            foreach (var mapper in mappers)
+            {
+                ranges = mapper.GetDestinationRanges(ranges);
+            }
+            mins.Add(ranges.Min(r => r.Start));
+        }
+
+        return mins.Min();
+    }
+
+    private static (long[] Seeds, IReadOnlyList<Mapper> Mappers) ParseInput(string input)
     {
         var mappings = input.Split(Environment.NewLine + Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
         var s = mappings[0].Split(':')[1];
@@ -57,9 +107,6 @@ humidity-to-location map:
         foreach (var block in mappings[1..])
         {
             var split = block.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
-            var label = split[0].Split(' ')[0].Split("-");
-            var from = label[0];
-            var to = label[2];
             var mm = new List<Mapping>();
 
             foreach (var mapping in split[1..])
@@ -68,27 +115,13 @@ humidity-to-location map:
                 mm.Add(new Mapping(values[0], values[1], values[2]));
             }
 
-            mappers.Add(new Mapper(from, to, mm));
+            mappers.Add(new Mapper(mm));
         }
 
-        var finalLocs = new List<long>();
-        foreach (var seed in seeds)
-        {
-            var sd = mappers.ToDictionary(m => m.From, m => m);
-            var start = "seed";
-            var loc = seed;
-            while (sd.TryGetValue(start, out var mapper))
-            {
-                loc = mapper.GetDestination(loc);
-                start = mapper.To;
-            }
-            finalLocs.Add(loc);
-        }
-
-        return finalLocs.Min();
+        return (seeds, mappers);
     }
 
-    private record Mapper(string From, string To, IEnumerable<Mapping> Mappings)
+    private record Mapper(IEnumerable<Mapping> Mappings)
     {
         public long GetDestination(long source)
         {
@@ -99,14 +132,54 @@ humidity-to-location map:
             var mapping = relevantMappings.First();
             return mapping.GetDestination(source);
         }
+
+        public List<Range> GetDestinationRanges(List<Range> ranges)
+        {
+            var newRanges = new List<Range>();
+
+            var current = ranges;
+            foreach (var mapping in Mappings)
+            {
+                var sourceStart = mapping.SourceStart;
+                var sourceEnd = mapping.SourceEnd;
+
+                var toProcess = new List<Range>();
+                foreach (var (start, end) in current)
+                {
+                    //              |src         r         size|
+                    // |s     e|
+                    //                                            |s      e|
+                    //        |s          e|
+                    //                                |s          e|
+                    //                    |s        e|
+                    var lower = (Start: start, End: Math.Min(sourceStart, end));
+                    if (lower.End > lower.Start) toProcess.Add(lower);
+
+                    var greater = (Start: Math.Max(sourceEnd, start), End: end);
+                    if (greater.End > greater.Start) toProcess.Add(greater);
+
+                    var mappable = (Start: Math.Max(start, sourceStart), End: Math.Min(sourceEnd, end));
+                    if (mappable.End > mappable.Start)
+                        newRanges.Add((
+                            mapping.DestinationStart + mappable.Start - mapping.SourceStart,
+                            mapping.DestinationStart + mappable.End - mapping.SourceStart));
+                }
+                current = toProcess;
+            }
+            newRanges.AddRange(current);
+            return newRanges;
+        }
     }
 
-    private record Mapping(long DestinationOffset, long SourceOffset, long Range)
+    private record Mapping(long DestinationStart, long SourceStart, long Range)
     {
+        public long SourceEnd { get; } = SourceStart + Range;
+        public long DestinationEnd { get; } = DestinationStart + Range;
+
         public bool IsSourceInRange(long source) => 
-            source >= SourceOffset && source <= SourceOffset + Range;
+            source >= SourceStart && source < SourceStart + Range;
 
         public long GetDestination(long source) =>
-            DestinationOffset + (source - SourceOffset);
+            DestinationStart + (source - SourceStart);
     }
 }
