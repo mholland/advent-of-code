@@ -98,12 +98,12 @@ public sealed class Day07(ITestOutputHelper output) : TestBase(output)
             counts switch
             {
                 [5] => 7,
-                [4, 1] => 6,
+                [4, _] => 6,
                 [3, 2] => 5,
-                [3, 1, 1] => 4,
-                [2, 2, 1] => 3,
-                [2, 1, 1, 1] => 2,
-                [1, 1, 1, 1, 1] => 1,
+                [3, ..] => 4,
+                [2, 2, _] => 3,
+                [2, ..] => 2,
+                [1, ..] => 1,
                 _ => 0
             };
 
@@ -124,6 +124,8 @@ public sealed class Day07(ITestOutputHelper output) : TestBase(output)
             }
             return Rank().CompareTo(other.Rank());
         }
+
+        public override string ToString() => string.Join("", Cards.Select(c => c.ToString()));
     }
 
     public record Card(int Value, char Symbol)
@@ -139,5 +141,7 @@ public sealed class Day07(ITestOutputHelper output) : TestBase(output)
                 'A' => new Card(14, c),
                 _ => throw new Exception("Unknown card")
             };
+
+        public override string ToString() => Value == 1 ? "J" : $"{Symbol}";
     }
 }
