@@ -15,14 +15,14 @@ public sealed class Day06(ITestOutputHelper output) : TestBase(output)
 
     [Fact]
     public void PartOne() =>
-        Output.WriteLine("Beatable runs: " + CalculateBeatableRuns(Input));
+        WriteOutput("Beatable runs: " + CalculateBeatableRuns(Input));
 
     [Fact]
     public void ExampleTwo() => CalculateBeatableRunsKerned(_example).Should().Be(71503);
 
     [Fact]
     public void PartTwo() =>
-        Output.WriteLine("Beatable runs after kerning: " + CalculateBeatableRunsKerned(Input));
+        WriteOutput("Beatable runs after kerning: " + CalculateBeatableRunsKerned(Input));
 
     private static int CalculateBeatableRuns(string[] input)
     {

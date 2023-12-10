@@ -1,3 +1,6 @@
+using System.Reflection;
+using System.Runtime.CompilerServices;
+
 namespace AdventOfCode;
 
 public abstract class TestBase
@@ -11,6 +14,12 @@ public abstract class TestBase
         Output = output;
         Input = ReadFile("input.txt");
     }
+
+    protected void WriteOutput(int output, [CallerMemberName] string? callerName = null) =>
+        WriteOutput(output.ToString(), callerName);
+
+    protected void WriteOutput(string output, [CallerMemberName] string? callerName = null) =>
+        Output.WriteLine($"{Day} {callerName}: {output}");
 
     protected string[] ReadFile(string name) =>
         File.ReadAllLines(Path.Combine(Day, name));

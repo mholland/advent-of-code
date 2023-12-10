@@ -21,11 +21,11 @@ public sealed class Day07(ITestOutputHelper output) : TestBase(output)
 
     [Fact]
     public void PartOne() =>
-        Output.WriteLine("Rank: " + CalculateRank(Input, false));
+        WriteOutput("Rank: " + CalculateRank(Input, false));
 
     [Fact]
     public void PartTwo() =>
-        Output.WriteLine("Rank balanced: " + CalculateRank(Input, true));
+        WriteOutput("Rank balanced: " + CalculateRank(Input, true));
 
     public static IEnumerable<object[]> CardData =>
     [

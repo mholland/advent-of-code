@@ -38,14 +38,14 @@ public sealed class Day03(ITestOutputHelper output) : TestBase(output)
 
     [Fact]
     public void PartOne() =>
-        Output.WriteLine("Parts sum: " + PartNumberSum(Input));
+        WriteOutput("Parts sum: " + PartNumberSum(Input));
 
     [Fact]
     public void ExampleTwo() => GearRatioSum(_example).Should().Be(467835);
 
     [Fact]
     public void PartTwo() =>
-        Output.WriteLine("Gear ratio sum: " + GearRatioSum(Input));
+        WriteOutput("Gear ratio sum: " + GearRatioSum(Input));
 
     private static (IEnumerable<Entry> Numbers, IEnumerable<Entry> Symbols) ParseInput(string[] input)
     {

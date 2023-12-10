@@ -47,14 +47,14 @@ humidity-to-location map:
 
     [Fact]
     public void PartOne() =>
-        Output.WriteLine("Lowest location: " + FindLowestIndividualLocation(ReadAll("input.txt")));
+        WriteOutput("Lowest location: " + FindLowestIndividualLocation(ReadAll("input.txt")));
 
     [Fact]
     public void ExampleTwo() => FindLowestRangeLocation(_example).Should().Be(46);
 
     [Fact]
     public void PartTwo() =>
-        Output.WriteLine("Lowest ranged location: " + FindLowestRangeLocation(ReadAll("input.txt")));
+        WriteOutput("Lowest ranged location: " + FindLowestRangeLocation(ReadAll("input.txt")));
 
     private static long FindLowestIndividualLocation(string input)
     {

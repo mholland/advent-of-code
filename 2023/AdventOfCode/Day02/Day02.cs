@@ -23,11 +23,11 @@ public sealed class Day02(ITestOutputHelper output) : TestBase(output)
 
     [Fact]
     public void PartOne() =>
-        Output.WriteLine("Possible game sum: " + DeterminePossibleGameSum(Input));
+        WriteOutput("Possible game sum: " + DeterminePossibleGameSum(Input));
 
     [Fact]
     public void PartTwo() =>
-        Output.WriteLine("Game power sum: " + GamePowerSum(Input));
+        WriteOutput("Game power sum: " + DeterminePossibleGameSum(Input));
 
     private static int DeterminePossibleGameSum(string[] input) => 
         input.Select((i, id) => Game.Create(id + 1, i))

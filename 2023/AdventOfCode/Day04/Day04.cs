@@ -21,14 +21,14 @@ public sealed class Day04(ITestOutputHelper output) : TestBase(output)
 
     [Fact]
     public void PartOne() =>
-        Output.WriteLine("Card points: " + CalculateCardPoints(Input));
+        WriteOutput("Card points: " + CalculateCardPoints(Input));
 
     [Fact]
     public void ExampleTwo() => CountCards(_example).Should().Be(30);
 
     [Fact]
     public void PartTwo() =>
-        Output.WriteLine("Cards won: " + CountCards(Input));
+        WriteOutput("Cards won: " + CountCards(Input));
 
     private static int CountCards(string[] input) 
     {

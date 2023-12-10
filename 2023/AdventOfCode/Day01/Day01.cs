@@ -30,14 +30,14 @@ public sealed class Day01(ITestOutputHelper output) : TestBase(output)
 
     [Fact]
     public void PartOne() =>
-        Output.WriteLine("Calibration value: " + CalculateInitialCalibrationValue(Input));
+        WriteOutput("Calibration value: " + CalculateInitialCalibrationValue(Input));
 
     [Fact]
     public void ExampleTwo() => CalculateFinalCalibrationValue(_exampleTwo).Should().Be(281);
 
     [Fact]
     public void PartTwo() =>
-        Output.WriteLine("Final calibration value: " + CalculateFinalCalibrationValue(Input));
+        WriteOutput("Final calibration value: " + CalculateFinalCalibrationValue(Input));
 
     public static int CalculateFinalCalibrationValue(string[] input) =>
         CalculateCalibrationValue(
