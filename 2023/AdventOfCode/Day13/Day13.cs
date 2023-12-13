@@ -95,70 +95,56 @@ public sealed class Day13(ITestOutputHelper output) : TestBase(output)
             return new Grid(rows, cols);
         }
 
-        public int Summary() => Summary(_rows, 100) + Summary(_cols, 1);
+        public int Summary() => Summary(_rows, 100).First() + Summary(_cols, 1).First();
 
-        private static int Summary(string[] x, int modifier)
+        private static IEnumerable<int> Summary(string[] x, int modifier)
         {
             for (var r = 0; r < x.Length - 1; r++)
             {
                 if (IsValidSymmetryLine(x, r))
-                    return (r + 1) * modifier;
+                    yield return (r + 1) * modifier;
+            }
+
+            yield return 0;
+        }
+
+        
+        public static int FindNewSummary(string[] toCheck, int originalSummary, int summaryModifier)
+        {
+            var candidates = new List<(int Position, int Index)>();
+            for (var p0 = 0; p0 < toCheck.Length; p0++)
+            {
+                for (var p1 = p0 + 1; p1 < toCheck.Length; p1++)
+                {
+                    var (differs, index) = DiffersByOne(toCheck[p0], toCheck[p1]);
+                    if (differs) candidates.Add((p0, index));
+                }
+            }
+
+            foreach (var (pos, index) in candidates.Distinct())
+            {
+                var @fixed = ImmutableArray.CreateBuilder<string>(toCheck.Length);
+                @fixed.AddRange(toCheck);
+
+                var cells = @fixed[pos].ToCharArray();
+                cells[index] = cells[index] == '.' ? '#' : '.';
+                @fixed[pos] = string.Join("", cells);
+                
+                var fixedSummary = Summary(@fixed.ToArray(), summaryModifier)
+                    .FirstOrDefault(f => f > 0 && f != originalSummary);
+                if (fixedSummary > 0)
+                    return fixedSummary;
             }
 
             return 0;
         }
 
+
         public int Fix()
         {
             var originalSummary = Summary();
-
-            var rowCandidates = new List<(int Row, int Index)>();
-            for (var r0 = 0; r0 < _rows.Length; r0++)
-            {
-                for (var r1 = r0 + 1; r1 < _rows.Length; r1++)
-                {
-                    var (differs, index) = DiffersByOne(_rows[r0], _rows[r1]);
-                    if (differs) rowCandidates.Add((r0, index));
-                }
-            }
-
-            foreach (var (row, index) in rowCandidates)
-            {
-                var @fixed = ImmutableArray.CreateBuilder<string>(_rows.Length);
-                @fixed.AddRange(_rows);
-
-                var cells = @fixed[row].ToCharArray();
-                cells[index] = cells[index] == '.' ? '#' : '.';
-                @fixed[row] = string.Join("", cells);
-                var fixedSummary = Summary(@fixed.ToArray(), 100);
-                if (fixedSummary > 0 && fixedSummary != originalSummary)
-                    return fixedSummary;
-            }
-
-            var colCandidates = new List<(int Col, int Index)>();
-            for (var c0 = 0; c0 < _cols.Length; c0++)
-            {
-                for (var c1 = c0 + 1; c1 < _cols.Length; c1++)
-                {
-                    var (differs, index) = DiffersByOne(_cols[c0], _cols[c1]);
-                    if (differs) colCandidates.Add((c0, index));
-                }
-            }
-
-            foreach (var (col, index) in colCandidates)
-            {
-                var @fixed = ImmutableArray.CreateBuilder<string>(_cols.Length);
-                @fixed.AddRange(_cols);
-
-                var cells = @fixed[col].ToCharArray();
-                cells[index] = cells[index] == '.' ? '#' : '.';
-                @fixed[col] = string.Join("", cells);
-                var fixedSummary = Summary(@fixed.ToArray(), 1);
-                if (fixedSummary > 0 && fixedSummary != originalSummary)
-                    return fixedSummary;
-            }
-
-            return 0;
+            var newRowSummary = FindNewSummary(_rows, originalSummary, 100);
+            return newRowSummary > 0 ? newRowSummary : FindNewSummary(_cols, originalSummary, 1);
         }
 
         private static (bool Differs, int Index) DiffersByOne(string a, string b)
@@ -175,7 +161,7 @@ public sealed class Day13(ITestOutputHelper output) : TestBase(output)
                     idx = i;
                 }
             }
-            return (true, idx);
+            return diff == 1 ? (true, idx) : (false, -1);
         }
 
         private static bool IsValidSymmetryLine(string[] toCheck, int line)
