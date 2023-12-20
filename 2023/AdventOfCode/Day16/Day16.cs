@@ -32,7 +32,7 @@ public sealed class Day16(ITestOutputHelper output) : TestBase(output)
     [Fact]
     public void PartTwo() => WriteOutput(FindMaximalEnergisedTiles(Input));
 
-    private static int FindMaximalEnergisedTiles(string[] input) => 
+    private static int FindMaximalEnergisedTiles(string[] input) =>
         Enumerable.Range(0, input.Length)
                 .Select(y => new Beam((-1, y), (1, 0)))
             .Concat(Enumerable.Range(0, input.Length)
@@ -60,73 +60,62 @@ public sealed class Day16(ITestOutputHelper output) : TestBase(output)
             {
                 grid[(x, y)] = input[y][x];
             }
-        var beams = new List<Beam>()
-        {
-            startBeam
-        };
+        var beams = new Queue<Beam>([startBeam]);
         var i = 0;
-        while (beams.Count != 0)
+        while (beams.TryDequeue(out var beam))
         {
             var toRemove = new List<Beam>();
             var toAdd = new List<Beam>();
-            foreach (var beam in beams)
-            {
-                var nextPos = beam.Next();
-                if (!grid.TryGetValue(nextPos, out var nextCell))
-                {
-                    toRemove.Add(beam);
-                    continue;
-                }
 
-                energised.Add(nextPos);
-                if (splittersVisited.Contains((nextPos, axes[beam.Dir])))
-                {
-                    toRemove.Add(beam);
-                    continue;
-                }
-                if (nextCell is '|' or '-')
-                    splittersVisited.Add((nextPos, axes[beam.Dir]));
-                beam.Pos = nextPos;
-                switch ((nextCell, beam.Dir))
-                {
-                    case ('.', _):
-                    case ('-', (-1, 0)):
-                    case ('-', (1, 0)):
-                    case ('|', (0, -1)):
-                    case ('|', (0, 1)):
-                        break;
-                    case ('/', (-1, 0)):
-                    case ('\\', (1, 0)):
-                        beam.Dir = (0, 1);
-                        break;
-                    case ('/', (0, 1)):
-                    case ('\\', (0, -1)):
-                        beam.Dir = (-1, 0);
-                        break;
-                    case ('\\', (-1, 0)):
-                    case ('/', (1, 0)):
-                        beam.Dir = (0, -1);
-                        break;
-                    case ('\\', (0, 1)):
-                    case ('/', (0, -1)):
-                        beam.Dir = (1, 0);
-                        break;
-                    case ('-', (0, 1)):
-                    case ('-', (0, -1)):
-                        beam.Dir = (-1, 0);
-                        toAdd.Add(new Beam(nextPos, (1, 0)));
-                        break;
-                    case ('|', (1, 0)):
-                    case ('|', (-1, 0)):
-                        beam.Dir = (0, -1);
-                        toAdd.Add(new Beam(nextPos, (0, 1)));
-                        break;
-                    default:
-                        throw new Exception("huh");
-                }
+            var nextPos = beam.Next();
+            if (!grid.TryGetValue(nextPos, out var nextCell))
+                continue;
+
+            energised.Add(nextPos);
+            if (splittersVisited.Contains((nextPos, axes[beam.Dir])))
+                continue;
+
+            if (nextCell is '|' or '-')
+                splittersVisited.Add((nextPos, axes[beam.Dir]));
+            beam.Pos = nextPos;
+            switch ((nextCell, beam.Dir))
+            {
+                case ('.', _):
+                case ('-', (-1, 0)):
+                case ('-', (1, 0)):
+                case ('|', (0, -1)):
+                case ('|', (0, 1)):
+                    break;
+                case ('/', (-1, 0)):
+                case ('\\', (1, 0)):
+                    beam.Dir = (0, 1);
+                    break;
+                case ('/', (0, 1)):
+                case ('\\', (0, -1)):
+                    beam.Dir = (-1, 0);
+                    break;
+                case ('\\', (-1, 0)):
+                case ('/', (1, 0)):
+                    beam.Dir = (0, -1);
+                    break;
+                case ('\\', (0, 1)):
+                case ('/', (0, -1)):
+                    beam.Dir = (1, 0);
+                    break;
+                case ('-', (0, 1)):
+                case ('-', (0, -1)):
+                    beam.Dir = (-1, 0);
+                    beams.Enqueue(new Beam(nextPos, (1, 0)));
+                    break;
+                case ('|', (1, 0)):
+                case ('|', (-1, 0)):
+                    beam.Dir = (0, -1);
+                    beams.Enqueue(new Beam(nextPos, (0, 1)));
+                    break;
+                default:
+                    throw new Exception("huh");
             }
-            foreach (var r in toRemove) beams.Remove(r);
-            foreach (var a in toAdd) beams.Add(a);
+            beams.Enqueue(beam);
 
             if (i++ > 1_000_000_000) throw new Exception("uh oh");
         }
