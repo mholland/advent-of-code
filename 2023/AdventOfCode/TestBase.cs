@@ -18,6 +18,9 @@ public abstract class TestBase
     protected void WriteOutput(int output, [CallerMemberName] string? callerName = null) =>
         WriteOutput(output.ToString(), callerName);
 
+    protected void WriteOutput(long output, [CallerMemberName] string? callerName = null) =>
+        WriteOutput(output.ToString(), callerName);
+
     protected void WriteOutput(string output, [CallerMemberName] string? callerName = null) =>
         Output.WriteLine($"{Day} {callerName}: {output}");
 

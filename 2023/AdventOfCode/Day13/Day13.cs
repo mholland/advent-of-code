@@ -69,7 +69,6 @@ public sealed class Day13(ITestOutputHelper output) : TestBase(output)
         return (Summary: result.Sum(r => r.Summary), Fixed: result.Sum(r => r.Fixed));
     }
 
-
     private sealed class Grid
     {
         private readonly string[] _rows;
@@ -113,13 +112,12 @@ public sealed class Day13(ITestOutputHelper output) : TestBase(output)
         {
             var candidates = new List<(int Position, int Index)>();
             for (var p0 = 0; p0 < toCheck.Length; p0++)
+            for (var p1 = p0 + 1; p1 < toCheck.Length; p1++)
             {
-                for (var p1 = p0 + 1; p1 < toCheck.Length; p1++)
-                {
-                    var (differs, index) = DiffersByOne(toCheck[p0], toCheck[p1]);
-                    if (differs) candidates.Add((p0, index));
-                }
+                var (differs, index) = DiffersByOne(toCheck[p0], toCheck[p1]);
+                if (differs) candidates.Add((p0, index));
             }
+            
 
             foreach (var (pos, index) in candidates.Distinct())
             {
