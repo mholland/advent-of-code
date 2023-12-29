@@ -1,5 +1,6 @@
 using System.Collections.Immutable;
 using Coord = (int X, int Y);
+using Grid = System.Collections.Generic.Dictionary<(int X, int Y), char>;
 
 namespace AdventOfCode.Day23;
 
@@ -41,14 +42,79 @@ public sealed class Day23(ITestOutputHelper output) : TestBase(output)
     public void PartOne() => WriteOutput(FindLongestPath(Input, false));
 
     [Fact]
-    public void ExampleTwo() => FindLongestPath(_example, true).Should().Be(154);
+    public void ExampleTwo() => FindLongestPathOptimised(_example).Should().Be(154);
 
     [Fact]
-    public void PartTwo() => WriteOutput(FindLongestPath(Input, true));
+    public void PartTwo() => WriteOutput(FindLongestPathOptimised(Input));
 
-    private static int FindLongestPath(string[] input, bool ignoreSlopes)
+    private static int FindLongestPathOptimised(string[] input)
     {
-        var grid = new Dictionary<Coord, char>();
+        var (grid, start, end) = ParseGrid(input, true);
+        var junctions = grid
+            .Where(x => x.Value == '.')
+            .Where(x => Neighbours(grid, x.Key).Count() != 2)
+            .Select(x => x.Key)
+            .ToArray();
+
+        var adjacency = junctions
+            .Select(j => (j, new List<(Coord Pos, int Dist)>()))
+            .ToDictionary();
+
+        foreach (var junction in junctions)
+        {
+            var queue = new Queue<(Coord Pos, int Dist)>([(junction, 0)]);
+            var visited = new HashSet<Coord>();
+            while (queue.TryDequeue(out var current))
+            {
+                var (pos, dist) = current;
+                if (junctions.Contains(pos) && pos != junction)
+                {
+                    adjacency[junction].Add((pos, dist));
+                    continue;
+                }
+                visited.Add(pos);
+                foreach (var nbor in Neighbours(grid, pos))
+                {
+                    if (!visited.Contains(nbor))
+                        queue.Enqueue((nbor, dist + 1));
+                }
+            }
+        }
+
+        var pathQueue = new Stack<(Coord Pos, int Dist, ImmutableHashSet<Coord> Visited)>([(start, 0, ImmutableHashSet<Coord>.Empty)]);
+        var max = 0;
+        while (pathQueue.TryPop(out var current))
+        {
+            var (pos, dist, visited) = current;
+            if (pos == end)
+            {
+                max = Math.Max(max, dist);
+                continue;
+            }
+            visited = visited.Add(pos);
+            foreach (var (nPos, nDist) in adjacency[pos])
+            {
+                if (!visited.Contains(nPos))
+                    pathQueue.Push((nPos, dist + nDist, visited));
+            }
+        }
+
+        return max;
+
+        static IEnumerable<Coord> Neighbours(Grid grid, Coord pos)
+        {
+            Coord[] dirs = [(1, 0), (-1, 0), (0, 1), (0, -1)];
+            foreach (var dir in dirs)
+            {
+                if (grid.TryGetValue(pos.Add(dir), out var tile) && tile != '#')
+                    yield return pos.Add(dir);
+            } 
+        }
+    }
+
+    private static (Grid Grid, Coord Start, Coord End) ParseGrid(string[] input, bool ignoreSlopes)
+    {
+        var grid = new Grid();
         var start = default(Coord);
         var end = default(Coord);
         for (var y = 0; y < input.Length; y++)
@@ -62,6 +128,12 @@ public sealed class Day23(ITestOutputHelper output) : TestBase(output)
                 grid[(x, y)] = ignoreSlopes ? tile != '#' ? '.' : '#' : tile;
             }
 
+        return (grid, start, end);
+    }
+
+    private static int FindLongestPath(string[] input, bool ignoreSlopes)
+    {
+        var (grid, start, end) = ParseGrid(input, ignoreSlopes);
         var queue = new Queue<(Coord Pos, int Dist, ImmutableHashSet<Coord> Seen)>([(start, 0, ImmutableHashSet<Coord>.Empty)]);
         var dists = new List<int>();
         Coord[] dirs = [(0, -1), (1, 0), (0, 1), (-1, 0)];
@@ -108,7 +180,7 @@ public sealed class Day23(ITestOutputHelper output) : TestBase(output)
         return dists.Max();
     }
 
-    private string PrintGrid(Dictionary<Coord, char> grid, ImmutableHashSet<Coord> seen)
+    private string PrintGrid(Grid grid, ImmutableHashSet<Coord> seen)
     {
         var maxX = grid.Keys.Max(g => g.X);
         var maxY = grid.Keys.Max(g => g.Y);
