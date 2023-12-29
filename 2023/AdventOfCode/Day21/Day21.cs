@@ -33,13 +33,17 @@ public sealed class Day21(ITestOutputHelper output) : TestBase(output)
 
     private static long CountReachableLocationsFurther(string[] input)
     {
+        const int steps = 26501365;
         // 26501365 - 65 =
         //      26501300
         // / 131 (width/heigh of grid)
         //        202300
         var height = input.Length;
         var yValues = new List<int>(3);
-        yValues.AddRange(CountReachableLocations(input, Enumerable.Range(0, 3).Select(i => height / 2 + i * height).ToArray()));
+        yValues.AddRange(CountReachableLocations(
+            input,
+            Enumerable.Range(0, 3).Select(i => height / 2 + i * height)
+            .ToArray()));
 
         // y = ax^2 + bx + c
         // yValues_0 = a0^2 + b0 + c = c
@@ -54,7 +58,7 @@ public sealed class Day21(ITestOutputHelper output) : TestBase(output)
         long a = (yValues[2] - c - 2 * (yValues[1] - c)) / 2;
         long b = yValues[1] - a - c;
 
-        var x = (26501365 - (height / 2)) / height;
+        var x = (steps - (height / 2)) / height;
         
         return a * x * x + b * x + c;
     }
