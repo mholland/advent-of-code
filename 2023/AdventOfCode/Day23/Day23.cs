@@ -36,53 +36,44 @@ public sealed class Day23(ITestOutputHelper output) : TestBase(output)
     ];
 
     [Fact]
-    public void ExampleOne() => FindLongestPath(_example, false).Should().Be(94);
+    public void ExampleOne() => FindLongestPath(_example, true).Should().Be(94);
 
     [Fact]
-    public void PartOne() => WriteOutput(FindLongestPath(Input, false));
+    public void PartOne() => WriteOutput(FindLongestPath(Input, true));
 
     [Fact]
-    public void ExampleTwo() => FindLongestPathOptimised(_example).Should().Be(154);
+    public void ExampleTwo() => FindLongestPath(_example, false).Should().Be(154);
 
     [Fact]
-    public void PartTwo() => WriteOutput(FindLongestPathOptimised(Input));
+    public void PartTwo() => WriteOutput(FindLongestPath(Input, false));
 
-    private static int FindLongestPathOptimised(string[] input)
+    private static readonly Dictionary<char, Coord> slopeTiles = new()
     {
-        var (grid, start, end) = ParseGrid(input, true);
+        ['^'] = (0, -1),
+        ['>'] = (1, 0),
+        ['v'] = (0, 1),
+        ['<'] = (-1, 0)
+    };
+
+    private static int FindLongestPath(string[] input, bool slopes)
+    {
+        var (grid, start, end) = ParseGrid(input);
         var junctions = grid
             .Where(x => x.Value == '.')
-            .Where(x => Neighbours(grid, x.Key).Count() != 2)
+            .Where(x => Neighbours(grid, x.Key, slopes).Count() != 2)
             .Select(x => x.Key)
             .ToArray();
 
-        var adjacency = junctions
-            .Select(j => (j, new List<(Coord Pos, int Dist)>()))
-            .ToDictionary();
+        var adjacency = BuildAdjacencyGraph(grid, junctions, slopes);
 
-        foreach (var junction in junctions)
-        {
-            var queue = new Queue<(Coord Pos, int Dist)>([(junction, 0)]);
-            var visited = new HashSet<Coord>();
-            while (queue.TryDequeue(out var current))
-            {
-                var (pos, dist) = current;
-                if (junctions.Contains(pos) && pos != junction)
-                {
-                    adjacency[junction].Add((pos, dist));
-                    continue;
-                }
-                visited.Add(pos);
-                foreach (var nbor in Neighbours(grid, pos))
-                {
-                    if (!visited.Contains(nbor))
-                        queue.Enqueue((nbor, dist + 1));
-                }
-            }
-        }
+        return DFS(adjacency, start, end);
+    }
 
+    public static int DFS(Dictionary<Coord, List<(Coord Pos, int Dist)>> adjacency, Coord start, Coord end)
+    {
         var pathQueue = new Stack<(Coord Pos, int Dist, ImmutableHashSet<Coord> Visited)>([(start, 0, ImmutableHashSet<Coord>.Empty)]);
         var max = 0;
+        var dists = new Dictionary<Coord, int>();
         while (pathQueue.TryPop(out var current))
         {
             var (pos, dist, visited) = current;
@@ -100,19 +91,54 @@ public sealed class Day23(ITestOutputHelper output) : TestBase(output)
         }
 
         return max;
+    }
 
-        static IEnumerable<Coord> Neighbours(Grid grid, Coord pos)
+    static IEnumerable<Coord> Neighbours(Grid grid, Coord pos, bool slopes)
+    {
+        if (slopes && slopeTiles.TryGetValue(grid[pos], out var d))
         {
-            Coord[] dirs = [(1, 0), (-1, 0), (0, 1), (0, -1)];
-            foreach (var dir in dirs)
-            {
-                if (grid.TryGetValue(pos.Add(dir), out var tile) && tile != '#')
-                    yield return pos.Add(dir);
-            } 
+            yield return pos.Add(d);
+            yield break;
+        }
+        Coord[] dirs = [(1, 0), (-1, 0), (0, 1), (0, -1)];
+        foreach (var dir in dirs)
+        {
+            if (grid.TryGetValue(pos.Add(dir), out var tile) && tile != '#')
+                yield return pos.Add(dir);
         }
     }
 
-    private static (Grid Grid, Coord Start, Coord End) ParseGrid(string[] input, bool ignoreSlopes)
+    public static Dictionary<Coord, List<(Coord Pos, int Dist)>> BuildAdjacencyGraph(Grid grid, Coord[] junctions, bool slopes)
+    {
+        var adjacency = junctions
+            .Select(j => (j, new List<(Coord Pos, int Dist)>()))
+            .ToDictionary();
+
+        foreach (var junction in junctions)
+        {
+            var queue = new Queue<(Coord Pos, int Dist)>([(junction, 0)]);
+            var visited = new HashSet<Coord>();
+            while (queue.TryDequeue(out var current))
+            {
+                var (pos, dist) = current;
+                if (junctions.Contains(pos) && pos != junction)
+                {
+                    adjacency[junction].Add((pos, dist));
+                    continue;
+                }
+                visited.Add(pos);
+                foreach (var nbor in Neighbours(grid, pos, slopes))
+                {
+                    if (!visited.Contains(nbor))
+                        queue.Enqueue((nbor, dist + 1));
+                }
+            }
+        }
+
+        return adjacency;
+    }
+
+    private static (Grid Grid, Coord Start, Coord End) ParseGrid(string[] input)
     {
         var grid = new Grid();
         var start = default(Coord);
@@ -125,59 +151,10 @@ public sealed class Day23(ITestOutputHelper output) : TestBase(output)
                     start = (x, y);
                 if (y == input.Length - 1 && tile == '.')
                     end = (x, y);
-                grid[(x, y)] = ignoreSlopes ? tile != '#' ? '.' : '#' : tile;
+                grid[(x, y)] = tile;
             }
 
         return (grid, start, end);
-    }
-
-    private static int FindLongestPath(string[] input, bool ignoreSlopes)
-    {
-        var (grid, start, end) = ParseGrid(input, ignoreSlopes);
-        var queue = new Queue<(Coord Pos, int Dist, ImmutableHashSet<Coord> Seen)>([(start, 0, ImmutableHashSet<Coord>.Empty)]);
-        var dists = new List<int>();
-        Coord[] dirs = [(0, -1), (1, 0), (0, 1), (-1, 0)];
-        var slopes = new Dictionary<char, Coord>
-        {
-            ['^'] = (0, -1),
-            ['>'] = (1, 0),
-            ['v'] = (0, 1),
-            ['<'] = (-1, 0)
-        };
-        var greatestDistances = new Dictionary<Coord, int>();
-        while (queue.TryDequeue(out var current))
-        {
-            var (position, distance, seen) = current;
-            if (greatestDistances.TryGetValue(position, out var d) && d > distance)
-                continue;
-            greatestDistances[position] = distance;
-            var currentTile = grid[position];
-            if (position == end)
-            {
-                dists.Add(current.Dist);
-                continue;
-            }
-            seen = seen.Add(position);
-
-            if (slopes.TryGetValue(currentTile, out var nextDir))
-            {
-                var nextPos = position.Add(nextDir);
-                if (!seen.Contains(nextPos) && grid[nextPos] != '#')
-                    queue.Enqueue((nextPos, distance + 1, seen));
-                continue;
-            }
-
-            foreach (var dir in dirs)
-            {
-                var n = position.Add(dir);
-
-                if (seen.Contains(n) || !grid.TryGetValue(n, out var nxt) || nxt == '#')
-                    continue;
-                queue.Enqueue((n, distance + 1, seen));
-            }
-        }
-
-        return dists.Max();
     }
 
     private string PrintGrid(Grid grid, ImmutableHashSet<Coord> seen)
@@ -190,7 +167,7 @@ public sealed class Day23(ITestOutputHelper output) : TestBase(output)
             var line = string.Empty;
             for (var x = 0; x <= maxX; x++)
             {
-                line += seen.Contains((x, y)) && !new char[] { '^', '>', '<', 'v'}.Contains(grid[(x, y)]) ? 'o' : grid[(x, y)];
+                line += seen.Contains((x, y)) && !new char[] { '^', '>', '<', 'v' }.Contains(grid[(x, y)]) ? 'o' : grid[(x, y)];
             }
             res += line + Environment.NewLine;
         }
