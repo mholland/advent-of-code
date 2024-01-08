@@ -1,3 +1,4 @@
+using System.Numerics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
@@ -15,11 +16,8 @@ public abstract class TestBase
         Input = ReadFile("input.txt");
     }
 
-    protected void WriteOutput(int output, [CallerMemberName] string? callerName = null) =>
-        WriteOutput(output.ToString(), callerName);
-
-    protected void WriteOutput(long output, [CallerMemberName] string? callerName = null) =>
-        WriteOutput(output.ToString(), callerName);
+    protected void WriteOutput<T>(T output, [CallerMemberName] string? callerName = null) where T : INumber<T> =>
+        WriteOutput(output!.ToString()!, callerName);
 
     protected void WriteOutput(string output, [CallerMemberName] string? callerName = null) =>
         Output.WriteLine($"{Day} {callerName}: {output}");

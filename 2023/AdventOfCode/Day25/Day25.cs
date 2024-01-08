@@ -51,7 +51,7 @@ public sealed class Day25(ITestOutputHelper output) : TestBase(output)
     [Fact]
     public void PartOne() => WriteOutput(CalculateGroupSizes(Input)); // 582590
 
-    public static int CalculateGroupSizes(string[] input)
+    public int CalculateGroupSizes(string[] input)
     {
         var (graph, edges) = ParseInput(input);
         var cuts = -1;
@@ -64,6 +64,8 @@ public sealed class Day25(ITestOutputHelper output) : TestBase(output)
             cuts = edges.Count;
             i++;
         }
+
+        Output.WriteLine("Iterations: " + i);
 
         return graph.Aggregate(1, (agg, cur) => agg *= cur.Value.Names.Count);
     }
@@ -93,7 +95,6 @@ public sealed class Day25(ITestOutputHelper output) : TestBase(output)
     private static (Graph Graph, Edges Edges) KargerCut((Graph Graph, Edges Edges) input)
     {
         var (graph, edges) = input;
-        var sw = Stopwatch.StartNew();
         var random = new Random();
         while (graph.Count > 2)
         {
@@ -101,17 +102,14 @@ public sealed class Day25(ITestOutputHelper output) : TestBase(output)
             var from = graph[f];
             var to = graph[t];
             from.Merge(to);
-            var outgoing = edges.Where(e => e.From == to.Name).ToList();
-            var incoming = edges.Where(e => e.To == to.Name).ToList();
-            foreach (var o in outgoing)
+            for (var i = 0; i < edges.Count; i++)
             {
-                edges.Remove(o);
-                edges.Add((from.Name, o.To));
-            }
-            foreach (var i in incoming)
-            {
-                edges.Remove(i);
-                edges.Add((from.Name, i.From));
+                var edge = edges[i];
+                if (edge.From == t)
+                    edge.From = f;
+                if (edge.To == t)
+                    edge.To = f;
+                edges[i] = edge;
             }
             edges.RemoveAll(e => e.From == e.To);
             graph.Remove(t);

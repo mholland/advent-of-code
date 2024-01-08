@@ -73,7 +73,6 @@ public sealed class Day23(ITestOutputHelper output) : TestBase(output)
     {
         var pathQueue = new Stack<(Coord Pos, int Dist, ImmutableHashSet<Coord> Visited)>([(start, 0, ImmutableHashSet<Coord>.Empty)]);
         var max = 0;
-        var dists = new Dictionary<Coord, int>();
         while (pathQueue.TryPop(out var current))
         {
             var (pos, dist, visited) = current;
