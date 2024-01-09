@@ -1,5 +1,4 @@
 using System.Numerics;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 
 namespace AdventOfCode;
@@ -17,9 +16,9 @@ public abstract class TestBase
     }
 
     protected void WriteOutput<T>(T output, [CallerMemberName] string? callerName = null) where T : INumber<T> =>
-        WriteOutput(output!.ToString()!, callerName);
+        WriteOutput(output.ToString(), callerName);
 
-    protected void WriteOutput(string output, [CallerMemberName] string? callerName = null) =>
+    protected void WriteOutput(string? output, [CallerMemberName] string? callerName = null) =>
         Output.WriteLine($"{Day} {callerName}: {output}");
 
     protected string[] ReadFile(string name) =>

@@ -31,7 +31,7 @@ public sealed class Day02(ITestOutputHelper output) : TestBase(output)
 
     private static int DeterminePossibleGameSum(string[] input) => 
         input.Select((i, id) => Game.Create(id + 1, i))
-            .Where(g => g.IsPossible(new Hand()
+            .Where(g => g.IsPossible(new Hand
             {
                 ["red"] = 12,
                 ["green"] = 13,
