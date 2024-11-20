@@ -16,7 +16,6 @@ with open("inputs/day13.input", encoding = "utf-8") as f:
 def print_dots(dots):
     mx = max(dots, key=lambda x: x[0])[0]
     my = max(dots, key=lambda x: x[1])[1]
-    print(mx, my)
     for y in range(my + 1):
         line = ""
         for x in range(mx + 1):
