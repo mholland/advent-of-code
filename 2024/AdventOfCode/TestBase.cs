@@ -7,7 +7,7 @@ using Xunit.Abstractions;
 namespace AdventOfCode;
 public abstract class TestBase(ITestOutputHelper output)
 {
-    protected ITestOutputHelper Output { get; } = output;
+    private ITestOutputHelper Output { get; } = output;
     protected abstract DateOnly Date { get; }
     private string DayDirectory => $"Day{Date.Day:D2}";
 
