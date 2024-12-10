@@ -15,7 +15,13 @@ public sealed class Day09(ITestOutputHelper output) : TestBase(output)
     [Fact]
     public async Task PartOne() => WriteOutput(CalculateChecksum(await ReadInputLines()));
 
-    private static long CalculateChecksum(string[] input)
+    [Fact]
+    public void ExampleTwo() => CalculateChecksum(_example, true).Should().Be(2858);
+
+    [Fact]
+    public async Task PartTwo() => WriteOutput(CalculateChecksum(await ReadInputLines(), true));
+
+    private static long CalculateChecksum(string[] input, bool wholeFiles = false)
     {
         var files = input[0].Select(c => c - '0').ToArray();
         var inputSize = files.Sum();
@@ -33,14 +39,28 @@ public sealed class Day09(ITestOutputHelper output) : TestBase(output)
             cursor += file;
         }
 
-        var nextFree = FindFirstEmptySlot(disk, 0);
-        var (nextMoveable, _) = FindFirstMoveableBlock(disk, disk.Length - 1, 1);
-        while (nextFree < nextMoveable)
+        var moved = new HashSet<int>();
+        var (nextMoveable, size, id) = wholeFiles 
+            ? FindFirstMoveableFile(disk, disk.Length - 1, moved) 
+            : FindFirstMoveableFile(disk, disk.Length - 1, moved, 1);
+        var nextFree = FindFirstEmptySlot(disk, 0, size);
+
+        while (nextMoveable > 0)
         {
-            disk[nextFree] = disk[nextMoveable];
-            disk[nextMoveable] = null;
-            nextFree = FindFirstEmptySlot(disk, nextFree + 1);
-            (nextMoveable, _) = FindFirstMoveableBlock(disk, nextMoveable - 1, 1);
+            if (nextFree >= 0 && nextFree < nextMoveable - size)
+            {
+                for (var i = nextFree; i < nextFree + size; i++)
+                    disk[i] = id;
+                for (var i = nextMoveable; i > nextMoveable - size; i--)
+                    disk[i] = null;
+                moved.Add(id);
+            }
+
+            (nextMoveable, size, id) = wholeFiles 
+                ? FindFirstMoveableFile(disk, nextMoveable - size, moved)
+                : FindFirstMoveableFile(disk, nextMoveable - 1, moved, 1);
+            if (nextMoveable == -1) break;
+            nextFree = FindFirstEmptySlot(disk, 0, size);
         }
 
         var checksum = 0L;
@@ -52,10 +72,10 @@ public sealed class Day09(ITestOutputHelper output) : TestBase(output)
 
         return checksum;
 
-        int FindFirstEmptySlot(int?[] d, int start = 0, int size = 1)
+        int FindFirstEmptySlot(int?[] d, int start, int size = 1)
         {
-            var cur = start;
-            while (cur < d.Length)
+            var cur = 0;
+            while (cur < d.Length - size)
             {
                 if (d[cur] != null)
                 {
@@ -64,28 +84,34 @@ public sealed class Day09(ITestOutputHelper output) : TestBase(output)
                 }
                 if (d[cur..(cur + size)].All(s => s is null))
                     return cur;
+                cur += 1;
             }
 
             return -1;
         }
 
-        (int Start, int Length) FindFirstMoveableBlock(int?[] d, int start, int max = int.MaxValue)
+        (int Start, int Length, int Id) FindFirstMoveableFile(int?[] d, int start, HashSet<int> alreadyMoved, int max = int.MaxValue)
         {
             var cur = start;
-            while (d[cur] == null)
+            while (cur > 0)
             {
-                cur -= 1;
-                if (cur == 0)
-                    return (0, -1);
+                if (d[cur] is not { } id || (wholeFiles && alreadyMoved.Contains(id)))
+                {
+                    cur -= 1;
+                    continue;
+                }
+
+                var length = 1;
+                var lc = cur - 1;
+                while (lc >= 0 && d[lc] == d[cur] && length < max)
+                {
+                    length += 1;
+                    lc -= 1;
+                }
+                return (cur, length, id);
             }
-            var length = 1;
-            var lc = cur - 1;
-            while (d[lc] == d[cur] && length < max)
-            {
-                length += 1;
-                lc -= 1;
-            }
-            return (cur, length);
+
+            return (-1, -1, -1);
         }
     }
 }
