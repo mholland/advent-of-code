@@ -144,7 +144,7 @@ public sealed class Day15(ITestOutputHelper output) : TestBase(output)
 
         return grid
             .Where(x => x.Value == '[')
-            .Aggregate(0, (agg, cur) => agg += cur.Key.Y * 100 + cur.Key.X);
+            .Aggregate(0, (agg, cur) => agg + (cur.Key.Y * 100 + cur.Key.X));
     }
 
     (bool CanMove, Pos[] BoxPositions) CanMoveBoxes(Dictionary<Pos, char> grid, Pos robot, Pos direction)
@@ -244,6 +244,6 @@ public sealed class Day15(ITestOutputHelper output) : TestBase(output)
 
     private record Pos(int X, int Y)
     {
-        public Pos To(Pos dir) => this with { X = X + dir.X, Y = Y + dir.Y };
+        public Pos To(Pos dir) => new(X: X + dir.X, Y: Y + dir.Y);
     }
 }
