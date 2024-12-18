@@ -12,30 +12,80 @@ public sealed class Day17(ITestOutputHelper output) : TestBase(output)
         "",
         "Program: 0,1,5,4,3,0"
     ];
-    
+
     [Fact]
     public void ExampleOne() => RunProgram(_example).Should().Be("4,6,3,5,6,3,5,2,1,0");
 
     [Fact]
     public async Task PartOne() => WriteOutput(RunProgram(await ReadInputLines()));
 
-    private static string RunProgram(string[] input)
+    private readonly string[] _exampleTwo =
+    [
+        "Register A: 2024",
+        "Register B: 0",
+        "Register C: 0",
+        "",
+        "Program: 0,3,5,4,3,0"
+    ];
+
+    [Fact]
+    public void ExampleTwo() => FindCopyARegister(_exampleTwo).Should().Be(117440);
+
+    // 0: B = A % 8
+    // 1: B = B ^ 5
+    // 2: C = A / B
+    // 3: B = B ^ C
+    // 4: B = B ^ 6
+    // 5: A = A / 2**3
+    // 6: OUT += B % 8
+    // 7: JNZ A 0
+    [Fact]
+    public async Task DecompileProgram() => WriteOutput(Program.Parse(await ReadInputLines()).ToString());
+
+    [Fact]
+    public async Task PartTwo() => WriteOutput(FindCopyARegister(await ReadInputLines()));
+
+    private static long FindCopyARegister(string[] input)
     {
-        return Program.Parse(input).Run();
+        var program = Program.Parse(input);
+        var queue = new Queue<long>([0]);
+        while (queue.TryDequeue(out var current))
+        {
+            for (var i = 0; i < 8; i++)
+            {
+                var a = current + i;
+                var output = program
+                    .Reset()
+                    .OverrideRegisterA(a)
+                    .Run();
+                var formattedOutput = string.Join(",", output);
+                if (string.Join(",", program.Instructions[^output.Length..]) != formattedOutput)
+                    continue;
+                if (string.Join(",", program.Instructions) == formattedOutput)
+                    return a;
+
+                queue.Enqueue(a * 8);
+            }
+        }
+
+        return -1;
     }
+
+    private static string RunProgram(string[] input) =>
+        string.Join(",", Program.Parse(input).Run());
 
     private class Program
     {
-        private int A { get; set; }
-        private int B { get; set; }
-        private int C { get; set; }
-        private int[] Instructions { get; }
+        private long A { get; set; }
+        private long B { get; set; }
+        private long C { get; set; }
+        public int[] Instructions { get; }
 
-        private List<int> Output { get; } = [];
+        private List<long> Output { get; } = [];
 
         private int _ip;
 
-        private Program(int a, int b, int c, int[] instructions)
+        private Program(long a, long b, long c, int[] instructions)
         {
             A = a;
             B = b;
@@ -43,39 +93,23 @@ public sealed class Day17(ITestOutputHelper output) : TestBase(output)
             Instructions = instructions;
         }
 
+        public Program OverrideRegisterA(long a)
+        {
+            A = a;
+            return this;
+        }
+
         public static Program Parse(string[] input)
         {
-            var a = int.Parse(input[0].Split(' ')[^1]);
-            var b = int.Parse(input[1].Split(' ')[^1]);
-            var c = int.Parse(input[2].Split(' ')[^1]);
-            
+            var a = long.Parse(input[0].Split(' ')[^1]);
+            var b = long.Parse(input[1].Split(' ')[^1]);
+            var c = long.Parse(input[2].Split(' ')[^1]);
+
             var instructions = input[4].Split(' ')[1].Split(',').Select(int.Parse).ToArray();
             return new Program(a, b, c, instructions);
         }
 
-        // Combo operands 0 through 3 represent literal values 0 through 3.
-        // Combo operand 4 represents the value of register A.
-        // Combo operand 5 represents the value of register B.
-        // Combo operand 6 represents the value of register C.
-        // Combo operand 7 is reserved and will not appear in valid programs.
-        // The eight instructions are as follows:
-        //
-        // The adv instruction (opcode 0) performs division. The numerator is the value in the A register. The denominator is found by raising 2 to the power of the instruction's combo operand. (So, an operand of 2 would divide A by 4 (2^2); an operand of 5 would divide A by 2^B.) The result of the division operation is truncated to an integer and then written to the A register.
-        //
-        // The bxl instruction (opcode 1) calculates the bitwise XOR of register B and the instruction's literal operand, then stores the result in register B.
-        //
-        // The bst instruction (opcode 2) calculates the value of its combo operand modulo 8 (thereby keeping only its lowest 3 bits), then writes that value to the B register.
-        //
-        // The jnz instruction (opcode 3) does nothing if the A register is 0. However, if the A register is not zero, it jumps by setting the instruction pointer to the value of its literal operand; if this instruction jumps, the instruction pointer is not increased by 2 after this instruction.
-        //
-        // The bxc instruction (opcode 4) calculates the bitwise XOR of register B and register C, then stores the result in register B. (For legacy reasons, this instruction reads an operand but ignores it.)
-        //
-        // The out instruction (opcode 5) calculates the value of its combo operand modulo 8, then outputs that value. (If a program outputs multiple values, they are separated by commas.)
-        //
-        // The bdv instruction (opcode 6) works exactly like the adv instruction except that the result is stored in the B register. (The numerator is still read from the A register.)
-        //
-        // The cdv instruction (opcode 7) works exactly like the adv instruction except that the result is stored in the C register. (The numerator is still read from the A register.)
-        public string Run()
+        public long[] Run()
         {
             var i = 0;
             while (_ip < Instructions.Length)
@@ -112,9 +146,10 @@ public sealed class Day17(ITestOutputHelper output) : TestBase(output)
                 }
                 _ip += 2;
             }
-            return string.Join(",", Output);
 
-            int Combo(int op) => op switch
+            return [.. Output];
+
+            long Combo(int op) => op switch
             {
                 >= 0 and <= 3 => op,
                 4 => A,
@@ -122,6 +157,50 @@ public sealed class Day17(ITestOutputHelper output) : TestBase(output)
                 6 => C,
                 _ => throw new Exception("Invalid op")
             };
+        }
+
+        public Program Reset()
+        {
+            _ip = 0;
+            Output.Clear();
+            A = 0;
+            B = 0;
+            C = 0;
+            return this;
+        }
+
+        public override string ToString()
+        {
+            var result = "\n";
+            var chunked = Instructions.Chunk(2).ToArray();
+            for (var i = 0; i < chunked.Length; i++)
+            {
+                result += $"{i}: " + chunked[i] switch
+                {
+                [0, var op] => "A = A / 2**" + Combo(op),
+                [1, var op] => $"B = B ^ {op}",
+                [2, var op] => $"B = {Combo(op)} % 8",
+                [3, var op] => $"JNZ A {op}",
+                [4, _] => "B = B ^ C",
+                [5, var op] => $"OUT += {Combo(op)} % 8",
+                [6, var op] => "B = A / " + Combo(op),
+                [7, var op] => "C = A / " + Combo(op),
+                    _ => ""
+                };
+                result += "\n";
+            }
+
+            return result;
+
+            static string Combo(int op) =>
+                op switch
+                {
+                    >= 0 and <= 3 => op.ToString(),
+                    4 => "A",
+                    5 => "B",
+                    6 => "C",
+                    _ => ""
+                };
         }
     }
 }
