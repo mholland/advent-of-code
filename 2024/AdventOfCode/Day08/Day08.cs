@@ -1,5 +1,3 @@
-using Pos = (int X, int Y);
-
 namespace AdventOfCode.Day08;
 
 public sealed class Day08(ITestOutputHelper output) : TestBase(output)
@@ -36,7 +34,7 @@ public sealed class Day08(ITestOutputHelper output) : TestBase(output)
 
     private int CountAntinodes(string[] input, bool resonantHarmonics = false)
     {
-        Dictionary<Pos, char> grid = [];
+        Grid grid = [];
         for (var y = 0; y < input.Length; y++)
         for (var x = 0; x < input[y].Length; x++)
         {
@@ -68,7 +66,7 @@ public sealed class Day08(ITestOutputHelper output) : TestBase(output)
         return antinodes.Count;
     }
 
-    private void PrintGrid(Dictionary<Pos,char> grid, HashSet<Pos> antinodes)
+    private void PrintGrid(Grid grid, HashSet<Pos> antinodes)
     {
         var output = "\n";
         for (var y = 0; y <= grid.Keys.Max(g => g.Y); y++)

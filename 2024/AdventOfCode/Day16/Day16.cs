@@ -1,5 +1,3 @@
-using Pos = (int X, int Y);
-
 namespace AdventOfCode.Day16;
 
 public sealed class Day16(ITestOutputHelper output) : TestBase(output)
@@ -66,7 +64,7 @@ public sealed class Day16(ITestOutputHelper output) : TestBase(output)
 
     private static (int Score, int Spots) LowestScore(string[] input)
     {
-        Dictionary<Pos, char> grid = [];
+        Grid grid = [];
         var start = (-1, -1);
         
         for (var y = 0; y < input.Length; y++)

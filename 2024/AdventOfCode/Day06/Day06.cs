@@ -1,11 +1,8 @@
-using System.Diagnostics;
-using Pos = (int X, int Y);
-
 namespace AdventOfCode.Day06;
 
 public sealed class Day06(ITestOutputHelper output) : TestBase(output)
 {
-    private static readonly Dictionary<Pos, Pos> NextDirs = new Dictionary<Pos, Pos>
+    private static readonly Dictionary<Pos, Pos> NextDirs = new()
     {
         [(0, -1)] = (1, 0),
         [(1, 0)] = (0, 1),
@@ -90,7 +87,7 @@ public sealed class Day06(ITestOutputHelper output) : TestBase(output)
         return obstacles;
     }
 
-    private static (IEnumerable<Pos> Steps, bool InLoop) MapPatrol(Pos start, Dictionary<Pos, char> grid)
+    private static (IEnumerable<Pos> Steps, bool InLoop) MapPatrol(Pos start, Grid grid)
     {
         var pos = start;
         var dir = (0, -1);
@@ -112,9 +109,9 @@ public sealed class Day06(ITestOutputHelper output) : TestBase(output)
         }
     }
 
-    private static (Dictionary<Pos, char> grid, Pos pos) ParseGrid(string[] input)
+    private static (Grid grid, Pos pos) ParseGrid(string[] input)
     {
-        Dictionary<Pos, char> grid = [];
+        Grid grid = [];
         Pos pos = default;
         for (var y = 0; y < input.Length; y++)
         for (var x = 0; x < input[y].Length; x++)

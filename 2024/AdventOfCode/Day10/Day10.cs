@@ -1,5 +1,3 @@
-using Pos = (int X, int Y);
-
 namespace AdventOfCode.Day10;
 
 public sealed class Day10(ITestOutputHelper output) : TestBase(output)

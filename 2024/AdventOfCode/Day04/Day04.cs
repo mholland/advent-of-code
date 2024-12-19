@@ -34,7 +34,7 @@ public sealed class Day04(ITestOutputHelper output) : TestBase(output)
 
     private static (int Lines, int Crosses) CountXmasOccurrences(string[] input)
     {
-        Dictionary<Pos, char> wordSearch = [];
+        Grid wordSearch = [];
         for (var y = 0; y < input.Length; y++)
         for (var x = 0; x < input[y].Length; x++)
         {
