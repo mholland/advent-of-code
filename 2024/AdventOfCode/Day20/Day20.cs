@@ -24,12 +24,15 @@ public sealed class Day20(ITestOutputHelper output) : TestBase(output)
     ];
 
     [Fact]
-    public void ExampleOne() => PicosecondSaves(_example);
+    public void ExampleOne() => PicosecondSaves(_example, 2);
 
     [Fact]
-    public async Task PartOne() => WriteOutput(PicosecondSaves(await ReadInputLines()));
+    public async Task PartOne() => WriteOutput(PicosecondSaves(await ReadInputLines(), 2));
 
-    private static int PicosecondSaves(string[] input)
+    [Fact]
+    public async Task PartTwo() => WriteOutput(PicosecondSaves(await ReadInputLines(), 20));
+
+    private static int PicosecondSaves(string[] input, int allowedPhase)
     {
         Grid grid = [];
         var start = (X: -1, Y: -1);
@@ -44,16 +47,17 @@ public sealed class Day20(ITestOutputHelper output) : TestBase(output)
                     end = (x, y);
                 grid[(x, y)] = c is '#' ? '#' : '.';
             }
-        var bestPath = FindPath(grid, start, end, (-1, -1));
-        List<int> paths = [];
-        foreach (var (pos, _) in grid.Where(g => g.Value == '#'))
-        {
-            paths.Add(FindPath(grid, start, end, pos));
-        };
-        return paths.Count(x => bestPath - x >= 100);
+        var dists = FindPath(grid, start, end);
+        var path = dists.Keys;
+        return dists
+            .Sum(d => path
+                .Where(p => Manhattan(d.Key, p) <= allowedPhase)
+                .Count(x => dists[x] - dists[d.Key] - Manhattan(d.Key, x) >= 100));
+
+        static int Manhattan(Pos p1, Pos p2) => Math.Abs(p1.X - p2.X) + Math.Abs(p1.Y - p2.Y);
     }
 
-    private static int FindPath(Grid grid, Pos start, Pos end, Pos phaseThrough)
+    private static Dictionary<Pos, int> FindPath(Grid grid, Pos start, Pos end)
     {
         var dists = new Dictionary<Pos, int>
         {
@@ -63,13 +67,13 @@ public sealed class Day20(ITestOutputHelper output) : TestBase(output)
         while (queue.TryDequeue(out var pos, out var dist))
         {
             if (pos == end)
-                return dist;
+                break;
 
             Pos[] neighbours = [(0, -1), (1, 0), (0, 1), (-1, 0)];
             foreach (var (nx, ny) in neighbours)
             {
                 var next = (pos.X + nx, pos.Y + ny);
-                if (grid.TryGetValue(next, out var nextTile) && (nextTile == '.' || next == phaseThrough))
+                if (grid.TryGetValue(next, out var nextTile) && (nextTile == '.'))
                 {
                     if (!dists.TryGetValue(next, out var nd) || dist + 1 < nd)
                     {
@@ -80,6 +84,6 @@ public sealed class Day20(ITestOutputHelper output) : TestBase(output)
             }
         }
 
-        return -1;
+        return dists;
     }
 }
