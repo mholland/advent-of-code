@@ -66,33 +66,50 @@ public sealed class Day21(ITestOutputHelper output) : TestBase(output)
     {
         // We can, initially, press any button we want at a cost of 1 as we're pressing buttons not a robot.
         var costs = new Dictionary<(Pos From, Pos To), long>();
-        foreach (var from in DirectionPad.Keys)
-        foreach (var to in DirectionPad.Keys)
+        foreach (var (from, to) in Pairs(DirectionPad))
             costs.Add((from, to), 1);
 
+        var paths = GetPairPaths();
+
         costs = Enumerable.Range(0, robots).Aggregate(costs, (agg, cur) =>
-            GetCosts(DirectionPad, agg));
+            GetCosts(DirectionPad, agg, paths));
 
-        costs = GetCosts(NumberPad, costs);
+        costs = GetCosts(NumberPad, costs, paths);
 
-        return input.Aggregate(0L, (agg, code) => agg + GetCost(code, costs, NumberPadInv) * int.Parse(code[..^1]));
+        return input.Aggregate(0L, (agg, code) => agg + GetCost(code, costs, NumberPad) * int.Parse(code[..^1]));
     }
 
-    private static Dictionary<(Pos From, Pos To), long> GetCosts(Grid Pad, Dictionary<(Pos From, Pos To), long> previousCosts)
+    private static Dictionary<(Grid Pad, Pos From, Pos To), List<string>> GetPairPaths()
+    {
+        Dictionary<(Grid Pad, Pos From, Pos To), List<string>> result = [];
+        foreach (var (from, to) in Pairs(DirectionPad))
+            result.Add((DirectionPad, from, to), FindPaths(DirectionPad, from, to));
+        foreach (var (from, to) in Pairs(NumberPad))
+            result.Add((NumberPad, from, to), FindPaths(NumberPad, from, to));
+        return result;
+    }
+
+    private static Dictionary<(Pos From, Pos To), long> GetCosts(Grid pad, Dictionary<(Pos From, Pos To), long> previousCosts, Dictionary<(Grid Pad, Pos From, Pos To), List<string>> pairPaths)
     {
         var newCosts = new Dictionary<(Pos From, Pos To), long>();
-        foreach (var from in Pad.Keys)
-        foreach (var to in Pad.Keys)
+        foreach (var (from, to) in Pairs(pad))
         {
-            var paths = FindPaths(Pad, from, to);
-            var minCost = paths.Min(p => GetCost(p, previousCosts, DirectionPadInv));
+            var minCost = pairPaths[(pad, from, to)].Min(p => GetCost(p, previousCosts, DirectionPad));
             newCosts.Add((from, to), minCost);
         }
         return newCosts;
     }
 
-    private static long GetCost(string path, Dictionary<(Pos From, Pos To), long> costs, Dictionary<char, Pos> lookup)
+    private static IEnumerable<(Pos From, Pos To)> Pairs(Grid grid)
     {
+        foreach (var from in grid.Keys)
+        foreach (var to in grid.Keys)
+            yield return (from, to);
+    }
+
+    private static long GetCost(string path, Dictionary<(Pos From, Pos To), long> costs, Grid pad)
+    {
+        var lookup = pad.ToDictionary(x => x.Value, x => x.Key);
         var from = lookup['A'];
         var cost = 0L;
 
