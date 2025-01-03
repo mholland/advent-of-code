@@ -1,4 +1,3 @@
-using System.Security;
 using ThreeNetwork = (string C1, string C2, string C3);
 
 namespace AdventOfCode.Day23;
@@ -76,8 +75,8 @@ public sealed class Day23(ITestOutputHelper output) : TestBase(output)
         foreach (var node in remaining)
         {
             HashSet<string> newPotential = [.. potential, node];
-            HashSet<string> newRemaining = currentRemaining.Where(r => mapping[node].Contains(r)).ToHashSet();
-            HashSet<string> newSkip = skip.Where(r => mapping[node].Contains(r)).ToHashSet();
+            var newRemaining = currentRemaining.Where(r => mapping[node].Contains(r)).ToHashSet();
+            var newSkip = skip.Where(r => mapping[node].Contains(r)).ToHashSet();
             cliques.AddRange(FindCliques(mapping, newPotential, newRemaining, newSkip));
 
             skip.Add(node);

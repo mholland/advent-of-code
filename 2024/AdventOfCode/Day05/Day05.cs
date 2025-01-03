@@ -70,7 +70,7 @@ public class Day05(ITestOutputHelper output) : TestBase(output)
             var requirementsByPage = relevantRules.GroupBy(r => r.Page)
                 .ToDictionary(r => r.Key, r => r.Select(rr => rr.Required));
             List<int> ordered = [];
-            while (ordered.Count < update.Length)
+            while (ordered.Count <= update.Length / 2)
             {
                 // Pick the next page that hasn't already been selected
                 // and either
@@ -81,7 +81,7 @@ public class Day05(ITestOutputHelper output) : TestBase(output)
                                                   rr.All(r => ordered.Contains(r))));
                 ordered.Add(next);
             }
-            sum += ordered[ordered.Count / 2];
+            sum += ordered[update.Length / 2];
         }
         
         return sum;

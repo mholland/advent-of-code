@@ -1,4 +1,3 @@
-using Xunit.Sdk;
 using Operation = (string V1, string Op, string V2, string VR);
 
 namespace AdventOfCode.Day24;
@@ -103,32 +102,19 @@ public sealed class Day24(ITestOutputHelper output) : TestBase(output)
     public async Task Sorted()
     {
         var (_, ops) = ParseInput(await ReadInputLines());
-        var operations = new List<Operation>();
-        var queue = new Queue<Operation>([ops.First(o => o.VR == "z45")]);
-        var seen = new HashSet<Operation>();
-        while (queue.TryDequeue(out var cur))
-        {
-            operations.Add(cur);
-            if (!seen.Add(cur))
-                continue;
-            foreach (var pre in ops.Where(o => o.VR == cur.V1 || o.VR == cur.V2))
-                queue.Enqueue(pre);
-        }
-        operations.Reverse();
-        List<Operation> newOps = [];
-        var reqs = new HashSet<string>();
-        var zeds = ops.Where(o => o.VR.StartsWith('z')).ToHashSet();
-        for (var i = 0; i < operations.Count; i++)
-        {
-            newOps.Add(operations[i]);
-            reqs.Add(operations[i].VR);
-            var insert = zeds.Where(z => reqs.Contains(z.V1) && reqs.Contains(z.V2));
-            newOps.AddRange(insert);
-            foreach (var ins in insert)
-                zeds.Remove(ins);
-        }
+        var inv = ops.ToDictionary(op => op.VR, op => (op.V1, op.Op, op.V2));
+        
+        for (var i = 0; i < 46; i++)
+            Print($"z{i:00}");
 
-        WriteOutput(Environment.NewLine + string.Join(Environment.NewLine, newOps.Select(x => $"{x.V1} {x.Op} {x.V2} -> {x.VR}")));
+        void Print(string val, int depth = 0, string indent = "")
+        {
+            if (depth == 5) return;
+            if (!inv.TryGetValue(val, out var op)) return;
+            WriteOutput($"{indent}{op.V1} {op.Op} {op.V2} -> {val}");
+            Print(op.V1, depth + 1, indent + "  ");
+            Print(op.V2, depth + 1, indent + "  ");
+        }
     }
 
     [Fact]

@@ -10,10 +10,10 @@ public sealed class Day11(ITestOutputHelper output) : TestBase(output)
     public void ExampleOne(string input, int blinks, int count) => StonesByCounts(input, blinks).Should().Be(count);
 
     [Fact]
-    public async Task PartOne() => WriteOutput(StonesByCounts((await ReadInputLines())[0], 25));
+    public async Task PartOne() => WriteOutput(StonesByCounts(await ReadInputFile(), 25));
 
     [Fact]
-    public async Task PartTwo() => WriteOutput(StonesByCounts((await ReadInputLines())[0], 75));
+    public async Task PartTwo() => WriteOutput(StonesByCounts(await ReadInputFile(), 75));
 
     private static long StonesByCounts(string input, int blinks)
     {

@@ -45,10 +45,14 @@ public sealed class Day17(ITestOutputHelper output) : TestBase(output)
     [Fact]
     public async Task PartTwo() => WriteOutput(FindCopyARegister(await ReadInputLines()));
 
+    [Fact]
+    public async Task Test() => Program.Parse(await ReadInputLines()).OverrideRegisterA(105734774294938).Run();
+
     private static long FindCopyARegister(string[] input)
     {
         var program = Program.Parse(input);
         var queue = new Queue<long>([0]);
+        var finalOutput = string.Join(",", program.Instructions);
         while (queue.TryDequeue(out var current))
         {
             for (var i = 0; i < 8; i++)
@@ -59,9 +63,10 @@ public sealed class Day17(ITestOutputHelper output) : TestBase(output)
                     .OverrideRegisterA(a)
                     .Run();
                 var formattedOutput = string.Join(",", output);
-                if (string.Join(",", program.Instructions[^output.Length..]) != formattedOutput)
+                var subset = string.Join(",", program.Instructions[^output.Length..]);
+                if (subset != formattedOutput)
                     continue;
-                if (string.Join(",", program.Instructions) == formattedOutput)
+                if (formattedOutput == finalOutput)
                     return a;
 
                 queue.Enqueue(a * 8);
@@ -144,6 +149,7 @@ public sealed class Day17(ITestOutputHelper output) : TestBase(output)
                         C = A / (int)Math.Pow(2, combo);
                         break;
                 }
+
                 _ip += 2;
             }
 
@@ -177,14 +183,14 @@ public sealed class Day17(ITestOutputHelper output) : TestBase(output)
             {
                 result += $"{i}: " + chunked[i] switch
                 {
-                [0, var op] => "A = A / 2**" + Combo(op),
-                [1, var op] => $"B = B ^ {op}",
-                [2, var op] => $"B = {Combo(op)} % 8",
-                [3, var op] => $"JNZ A {op}",
-                [4, _] => "B = B ^ C",
-                [5, var op] => $"OUT += {Combo(op)} % 8",
-                [6, var op] => "B = A / " + Combo(op),
-                [7, var op] => "C = A / " + Combo(op),
+                    [0, var op] => "A = A / 2**" + Combo(op),
+                    [1, var op] => $"B = B ^ {op}",
+                    [2, var op] => $"B = {Combo(op)} % 8",
+                    [3, var op] => $"JNZ A {op}",
+                    [4, _] => "B = B ^ C",
+                    [5, var op] => $"OUT += {Combo(op)} % 8",
+                    [6, var op] => "B = A / " + Combo(op),
+                    [7, var op] => "C = A / " + Combo(op),
                     _ => ""
                 };
                 result += "\n";

@@ -35,7 +35,7 @@ public sealed class Day19(ITestOutputHelper output) : TestBase(output)
         var patterns = input[0].Split(", ", StringSplitOptions.RemoveEmptyEntries);
         var designs = input[2..];
         var cache = new Dictionary<string, long>();
-        var constructable = designs.Select(IsConstructable);
+        var constructable = designs.Select(IsConstructable).ToArray();
         var total = constructable.Count(d => d > 0);
         var ways = constructable.Sum();
 
@@ -49,9 +49,9 @@ public sealed class Day19(ITestOutputHelper output) : TestBase(output)
             if (design == string.Empty)
                 return 1;
 
-            var constructable = patterns.Where(design.StartsWith).Sum(x => IsConstructable(design[x.Length..]));
-            cache.Add(design, constructable);
-            return constructable;
+            var constr = patterns.Where(design.StartsWith).Sum(x => IsConstructable(design[x.Length..]));
+            cache.Add(design, constr);
+            return constr;
         }
     }
 }

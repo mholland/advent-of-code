@@ -43,7 +43,7 @@ public sealed class Day09(ITestOutputHelper output) : TestBase(output)
         var (nextMoveable, size, id) = wholeFiles 
             ? FindFirstMoveableFile(disk, disk.Length - 1, moved) 
             : FindFirstMoveableFile(disk, disk.Length - 1, moved, 1);
-        var nextFree = FindFirstEmptySlot(disk, 0, size);
+        var nextFree = FindFirstEmptySlot(disk, size);
 
         while (nextMoveable > 0)
         {
@@ -60,7 +60,7 @@ public sealed class Day09(ITestOutputHelper output) : TestBase(output)
                 ? FindFirstMoveableFile(disk, nextMoveable - size, moved)
                 : FindFirstMoveableFile(disk, nextMoveable - 1, moved, 1);
             if (nextMoveable == -1) break;
-            nextFree = FindFirstEmptySlot(disk, 0, size);
+            nextFree = FindFirstEmptySlot(disk, size);
         }
 
         var checksum = 0L;
@@ -72,17 +72,17 @@ public sealed class Day09(ITestOutputHelper output) : TestBase(output)
 
         return checksum;
 
-        int FindFirstEmptySlot(int?[] d, int start, int size = 1)
+        int FindFirstEmptySlot(int?[] d, int sz = 1)
         {
             var cur = 0;
-            while (cur < d.Length - size)
+            while (cur < d.Length - sz)
             {
                 if (d[cur] != null)
                 {
                     cur += 1;
                     continue;
                 }
-                if (d[cur..(cur + size)].All(s => s is null))
+                if (d[cur..(cur + sz)].All(s => s is null))
                     return cur;
                 cur += 1;
             }
@@ -95,7 +95,7 @@ public sealed class Day09(ITestOutputHelper output) : TestBase(output)
             var cur = start;
             while (cur > 0)
             {
-                if (d[cur] is not { } id || (wholeFiles && alreadyMoved.Contains(id)))
+                if (d[cur] is not { } idn || (wholeFiles && alreadyMoved.Contains(idn)))
                 {
                     cur -= 1;
                     continue;
@@ -108,7 +108,7 @@ public sealed class Day09(ITestOutputHelper output) : TestBase(output)
                     length += 1;
                     lc -= 1;
                 }
-                return (cur, length, id);
+                return (cur, length, idn);
             }
 
             return (-1, -1, -1);

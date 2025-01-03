@@ -62,7 +62,7 @@ public sealed class Day08(ITestOutputHelper output) : TestBase(output)
             }
         }
         
-        PrintGrid(grid, antinodes);
+        // PrintGrid(grid, antinodes);
         return antinodes.Count;
     }
 

@@ -63,7 +63,7 @@ public class Day18(ITestOutputHelper output) : TestBase(output)
 
         return "Not found";
     }
-    
+
     private static int ShortestDistance(string[] input, int w, int h, int toTake)
     {
         var bytes = ParseBytes(input).Take(toTake)

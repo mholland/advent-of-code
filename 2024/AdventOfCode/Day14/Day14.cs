@@ -74,11 +74,10 @@ public sealed class Day14(ITestOutputHelper output) : TestBase(output)
                 bestConnected = Math.Max(bestConnected, seen.Count);
                 globalSeen.UnionWith(seen);
             }
-            if (bestConnected >= 20) 
-            {
-                PrintGrid(positions);
-                return i;
-            }
+
+            if (bestConnected < 20) continue;
+            // PrintGrid(positions);
+            return i;
         }
 
         return 0;
@@ -135,6 +134,6 @@ public sealed class Day14(ITestOutputHelper output) : TestBase(output)
         }
 
         public void Move(int w, int h) =>
-            Pos = ((((Pos.X + Vel.X) % w) + w) % w, (((Pos.Y + Vel.Y) % h) + h) % h);
+            Pos = (((Pos.X + Vel.X) % w + w) % w, ((Pos.Y + Vel.Y) % h + h) % h);
     }
 }

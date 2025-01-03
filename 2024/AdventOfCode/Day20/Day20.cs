@@ -41,10 +41,16 @@ public sealed class Day20(ITestOutputHelper output) : TestBase(output)
             for (var x = 0; x < input[y].Length; x++)
             {
                 var c = input[y][x];
-                if (c is 'S')
-                    start = (x, y);
-                if (c is 'E')
-                    end = (x, y);
+                switch (c)
+                {
+                    case 'S':
+                        start = (x, y);
+                        break;
+                    case 'E':
+                        end = (x, y);
+                        break;
+                }
+
                 grid[(x, y)] = c is '#' ? '#' : '.';
             }
         var dists = FindPath(grid, start, end);
@@ -73,14 +79,10 @@ public sealed class Day20(ITestOutputHelper output) : TestBase(output)
             foreach (var (nx, ny) in neighbours)
             {
                 var next = (pos.X + nx, pos.Y + ny);
-                if (grid.TryGetValue(next, out var nextTile) && (nextTile == '.'))
-                {
-                    if (!dists.TryGetValue(next, out var nd) || dist + 1 < nd)
-                    {
-                        queue.Enqueue(next, dist + 1);
-                        dists[next] = dist + 1;
-                    }
-                }
+                if (!grid.TryGetValue(next, out var nextTile) || nextTile != '.') continue;
+                if (dists.TryGetValue(next, out var nd) && dist + 1 >= nd) continue;
+                queue.Enqueue(next, dist + 1);
+                dists[next] = dist + 1;
             }
         }
 

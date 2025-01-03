@@ -46,7 +46,7 @@ public sealed class Day16(ITestOutputHelper output) : TestBase(output)
 
     [Fact]
     public void ExampleOne() => LowestScore(_example).Score.Should().Be(7036);
-    
+
     [Fact]
     public void ExampleTwo() => LowestScore(_exampleTwo).Score.Should().Be(11048);
 
@@ -55,7 +55,7 @@ public sealed class Day16(ITestOutputHelper output) : TestBase(output)
 
     [Fact]
     public void ExampleThree() => LowestScore(_example).Spots.Should().Be(45);
-    
+
     [Fact]
     public void ExampleFour() => LowestScore(_exampleTwo).Spots.Should().Be(64);
 
@@ -66,17 +66,18 @@ public sealed class Day16(ITestOutputHelper output) : TestBase(output)
     {
         Grid grid = [];
         var start = (-1, -1);
-        
+
         for (var y = 0; y < input.Length; y++)
         for (var x = 0; x < input[y].Length; x++)
         {
             var c = input[y][x];
             grid[(x, y)] = c;
             if (c is not 'S') continue;
-            
+
             start = (x, y);
             grid[(x, y)] = '.';
         }
+
         Pos[] dirs = [(0, -1), (1, 0), (0, 1), (-1, 0)];
         var lowest = int.MaxValue;
         var seen = new Dictionary<(Pos, int), int>();
@@ -91,6 +92,7 @@ public sealed class Day16(ITestOutputHelper output) : TestBase(output)
                 lowest = Math.Min(lowest, cost);
                 continue;
             }
+
             if (seen.TryGetValue((pos, dir), out var cst) && cst < cost || cost > lowest)
                 continue;
             seen[(pos, dir)] = cost;
@@ -116,7 +118,7 @@ public sealed class Day16(ITestOutputHelper output) : TestBase(output)
             agg.UnionWith(cur.Route);
             return agg;
         });
-        
+
         return (lowest, positions.Count);
     }
 }

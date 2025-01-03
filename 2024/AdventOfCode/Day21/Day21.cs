@@ -22,9 +22,6 @@ public sealed class Day21(ITestOutputHelper output) : TestBase(output)
         [(2, 1)] = '>'
     };
 
-    private static readonly Dictionary<char, Pos> DirectionPadInv = 
-        DirectionPad.ToDictionary(x => x.Value, x => x.Key);
-
     // +---+---+---+
     // | 7 | 8 | 9 |
     // +---+---+---+
@@ -50,9 +47,6 @@ public sealed class Day21(ITestOutputHelper output) : TestBase(output)
         [(2, 3)] = 'A'
     };
 
-    private static readonly Dictionary<char, Pos> NumberPadInv =
-        NumberPad.ToDictionary(x => x.Value, x => x.Key);
-    
     [Fact]
     public void ExampleOne() => ComplexitySum(_example, 2).Should().Be(126384);
 
@@ -89,7 +83,10 @@ public sealed class Day21(ITestOutputHelper output) : TestBase(output)
         return result;
     }
 
-    private static Dictionary<(Pos From, Pos To), long> GetCosts(Grid pad, Dictionary<(Pos From, Pos To), long> previousCosts, Dictionary<(Grid Pad, Pos From, Pos To), List<string>> pairPaths)
+    private static Dictionary<(Pos From, Pos To), long> GetCosts(
+        Grid pad, 
+        Dictionary<(Pos From, Pos To), long> previousCosts, 
+        Dictionary<(Grid Pad, Pos From, Pos To), List<string>> pairPaths)
     {
         var newCosts = new Dictionary<(Pos From, Pos To), long>();
         foreach (var (from, to) in Pairs(pad))
@@ -100,12 +97,8 @@ public sealed class Day21(ITestOutputHelper output) : TestBase(output)
         return newCosts;
     }
 
-    private static IEnumerable<(Pos From, Pos To)> Pairs(Grid grid)
-    {
-        foreach (var from in grid.Keys)
-        foreach (var to in grid.Keys)
-            yield return (from, to);
-    }
+    private static IEnumerable<(Pos From, Pos To)> Pairs(Grid grid) =>
+        grid.Keys.SelectMany(_ => grid.Keys, (from, to) => (from, to));
 
     private static long GetCost(string path, Dictionary<(Pos From, Pos To), long> costs, Grid pad)
     {

@@ -68,10 +68,10 @@ public sealed class Day15(ITestOutputHelper output) : TestBase(output)
     ];
 
     [Fact]
-    public void ExampleThree() => GPSSumWiden(_exampleThree, true);
+    public void ExampleThree() => GPSSumWiden(_exampleThree);
 
     [Fact]
-    public void ExampleFour() => GPSSumWiden(_exampleTwo, true).Should().Be(9021);
+    public void ExampleFour() => GPSSumWiden(_exampleTwo).Should().Be(9021);
 
     [Fact]
     public async Task PartTwo() => WriteOutput(GPSSumWiden(await ReadInputLines()));
@@ -99,21 +99,21 @@ public sealed class Day15(ITestOutputHelper output) : TestBase(output)
                 var p2 = new Pos(2 * x + 1, y);
                 var val = input[y][x];
 
-                if (val is '.' or '#')
+                switch (val)
                 {
-                    grid[p1] = val;
-                    grid[p2] = val;
-                }
-                if (val is 'O')
-                {
-                    grid[p1] = '[';
-                    grid[p2] = ']';
-                }
-                if (input[y][x] == '@')
-                {
-                    grid[p1] = '.';
-                    grid[p2] = '.';
-                    robot = p1;
+                    case '.' or '#':
+                        grid[p1] = val;
+                        grid[p2] = val;
+                        break;
+                    case 'O':
+                        grid[p1] = '[';
+                        grid[p2] = ']';
+                        break;
+                    case '@':
+                        grid[p1] = '.';
+                        grid[p2] = '.';
+                        robot = p1;
+                        break;
                 }
             }
 
@@ -123,20 +123,18 @@ public sealed class Day15(ITestOutputHelper output) : TestBase(output)
             var to = robot.To(dir);
             if (grid[to] == '.')
                 robot = to;
-            if (grid[to] is '[' or ']')
+            if (grid[to] is not ('[' or ']')) continue;
+            var (canMove, boxPositions) = CanMoveBoxes(grid, robot, dir);
+            if (!canMove)
+                continue;
+            for (var i = boxPositions.Length - 1; i >= 0; i--)
             {
-                var (canMove, boxPositions) = CanMoveBoxes(grid, robot, dir);
-                if (!canMove)
-                    continue;
-                for (var i = boxPositions.Length - 1; i >= 0; i--)
-                {
-                    var val = grid[boxPositions[i]];
-                    var next = boxPositions[i].To(dir);
-                    grid[next] = val;
-                    grid[boxPositions[i]] = '.';
-                }
-                robot = to;
+                var val = grid[boxPositions[i]];
+                var next = boxPositions[i].To(dir);
+                grid[next] = val;
+                grid[boxPositions[i]] = '.';
             }
+            robot = to;
         }
 
         if (print)
@@ -144,10 +142,10 @@ public sealed class Day15(ITestOutputHelper output) : TestBase(output)
 
         return grid
             .Where(x => x.Value == '[')
-            .Aggregate(0, (agg, cur) => agg + (cur.Key.Y * 100 + cur.Key.X));
+            .Aggregate(0, (agg, cur) => agg + cur.Key.Y * 100 + cur.Key.X);
     }
 
-    (bool CanMove, Pos[] BoxPositions) CanMoveBoxes(Dictionary<Pos, char> grid, Pos robot, Pos direction)
+    private (bool CanMove, Pos[] BoxPositions) CanMoveBoxes(Dictionary<Pos, char> grid, Pos robot, Pos direction)
     {
         var to = robot.To(direction);
         var seen = new HashSet<Pos>();
@@ -162,12 +160,16 @@ public sealed class Day15(ITestOutputHelper output) : TestBase(output)
                 queue.Enqueue(current.To(_directions['<']));
 
             var next = current.To(direction);
-            if (grid[next] is '#')
-                return (false, []);
-            if (grid[next] is '.')
-                continue;
-
-            queue.Enqueue(next);
+            switch (grid[next])
+            {
+                case '#':
+                    return (false, []);
+                case '.':
+                    continue;
+                default:
+                    queue.Enqueue(next);
+                    break;
+            }
         }
 
         return (true, seen.ToArray());
@@ -186,11 +188,9 @@ public sealed class Day15(ITestOutputHelper output) : TestBase(output)
             {
                 var pos = new Pos(x, y);
                 grid[pos] = input[y][x];
-                if (input[y][x] == '@')
-                {
-                    robot = pos;
-                    grid[pos] = '.';
-                }
+                if (input[y][x] != '@') continue;
+                robot = pos;
+                grid[pos] = '.';
             }
 
         foreach (var direction in instructions)
@@ -215,7 +215,7 @@ public sealed class Day15(ITestOutputHelper output) : TestBase(output)
 
         return grid
             .Where(x => x.Value == 'O')
-            .Aggregate(0, (agg, cur) => agg += cur.Key.Y * 100 + cur.Key.X);
+            .Aggregate(0, (agg, cur) => agg + cur.Key.Y * 100 + cur.Key.X);
 
         Pos GetNextNonBox(Pos c, Pos dir)
         {

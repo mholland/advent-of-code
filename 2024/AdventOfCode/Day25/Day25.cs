@@ -1,5 +1,3 @@
-using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.ObjectModel;
-
 namespace AdventOfCode.Day25;
 
 public sealed class Day25(ITestOutputHelper output) : TestBase(output)
@@ -7,7 +5,6 @@ public sealed class Day25(ITestOutputHelper output) : TestBase(output)
     protected override DateOnly Date => new(2024, 12, 25);
 
     private readonly string _example =
-
         """
         #####
         .####
@@ -76,23 +73,17 @@ public sealed class Day25(ITestOutputHelper output) : TestBase(output)
         }
 
         var fits = 0;
-        for (var i = 0; i < keys.Count; i++)
+        foreach (var key in keys)
+        foreach (var @lock in locks)
         {
-            var key = keys[i];
-            for (var j = 0; j < locks.Count; j++)
+            var fit = true;
+            foreach (var (pos, ch) in key)
             {
-                var @lock = locks[j];
-                var fit = true;
-                foreach (var (pos, ch) in key)
-                {
-                    if (ch == '#' && @lock[pos] == '#')
-                    {
-                        fit = false;
-                        break;
-                    }
-                }
-                if (fit) fits += 1;
+                if (ch != '#' || @lock[pos] != '#') continue;
+                fit = false;
+                break;
             }
+            if (fit) fits += 1;
         }
 
         return fits;
